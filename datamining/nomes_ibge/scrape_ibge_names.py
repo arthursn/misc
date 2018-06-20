@@ -10,6 +10,7 @@ def scrape_names(names):
     metalist = []
 
     for name in names:
+        name = name.title()
         txt = None
 
         try:
