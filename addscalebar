@@ -56,6 +56,7 @@ if __name__ == '__main__':
                            int(args.resize*img.height))
                 img = img.resize(size=newsize)
 
+            # https://fengl.org/2014/07/09/matplotlib-savefig-without-borderframe/
             fig = plt.figure()
             fig.set_size_inches(img.width/args.dpi,
                                 img.height/args.dpi, forward=False)
