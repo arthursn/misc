@@ -1,0 +1,56 @@
+#!/usr/bin/python3 
+
+# -*- coding: utf-8 -*-
+
+import os
+import numpy as np
+
+
+def fmt(x):
+    return '{: 8d}'.format(x)
+
+
+def xy2gsa(fin, fout=None, title=''):
+    tth, I = np.loadtxt(fin).T
+
+    tthstep = np.mean(np.diff(tth))
+    n = len(tth)
+    nline = int(round(n/10))
+
+    I = np.round(I).astype(int)
+
+    if not fout:
+        fout = os.path.splitext(fin)[0] + '.gsa'
+
+    try:
+        with open(fout, 'w') as file:
+            linewidth = 80
+
+            file.write('{:{}<{}}'.format(title, ' ', linewidth))
+            file.write('\n')
+
+            header = 'BANK 1 {:d} {:d}    CONS {:g} {:g} 0 0'.format(
+                n, nline, 100*tth[0], 100*tthstep)
+            file.write('{:{}<{}}'.format(header, ' ', linewidth))
+            file.write('\n')
+
+            for row in np.array_split(I, range(10, n, 10)):
+                line = ''.join(map(fmt, row))
+                file.write('{:{}<{}}'.format(line, ' ', linewidth))
+                file.write('\n')
+    except:
+        raise
+    else:
+        print('File {} successfully created'.format(fout))
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('fin', nargs=1)
+    parser.add_argument('fout', nargs=1)
+    parser.add_argument('-t', '--title', default='')
+    args = parser.parse_args()
+
+    xy2gsa(fin=args.fin[0], fout=args.fout[0], title=args.title)
