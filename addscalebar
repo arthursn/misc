@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--pxsize', required=True)
     parser.add_argument('-g', '--gray', action='store_true')
     parser.add_argument('-e', '--ext', default='pdf')
-    parser.add_argument('-c', '--crop', type=float, nargs=4)
+    parser.add_argument('-c', '--crop', type=int, nargs=4)
     parser.add_argument('-d', '--dpi', type=float, default=300)
     parser.add_argument('-r', '--resize', type=float, default=1)
     parser.add_argument('-s', '--suffix', default='')
