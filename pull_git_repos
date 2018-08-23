@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# store the current dir
+curdir=$(pwd)
+
+# Let the person running the script know what's going on.
+echo -e "\n\033[1mPulling in latest changes for all repositories...\033[0m"
+
+# Find all git repositories and update it to the master latest revision
+for dirname in $(find -L . -name ".git" | cut -c3- | rev | cut -c6- | rev); do
+    echo -e "\n\033[33m"+$dirname+"\033[0m";
+
+    # We have to go to the .git parent directory to call the pull command
+    cd "$curdir/$dirname"
+
+    # finally pull
+    git pull origin master
+done
+
+# lets get back to the curdir
+cd $curdir
+
+echo -e "\n\033[32mComplete!\033[0m\n"
