@@ -134,10 +134,7 @@ if __name__ == '__main__':
             ax.set_title('{} FIA Formula One World Drivers\'s Championship standings'.format(year))
             ax.legend(loc='upper left', ncol=2)
 
-            if not os.path.exists('f1standings'):
-                os.makedirs('f1standings')
-
-            plt.savefig(os.path.join('f1standings', 'f1{}.pdf'.format(year)))
+            fig.savefig('f1{}.pdf'.format(year))
             plt.show()
         else:
             print('No data found')
