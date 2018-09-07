@@ -30,7 +30,7 @@ if __name__ == '__main__':
             it += 1
             sum_rev += reverse(sum_rev)
             if it > itmax:
-                print("itmax was reached")
+                print("n={} itmax was reached".format(n))
                 break
 
         if ispalindrome(sum_rev):
