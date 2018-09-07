@@ -35,9 +35,6 @@ def ulam_spiral_coords(N, origin=1):
     return I, J
 
 
-import matplotlib.pyplot as plt
-
-
 def get_primes(n):
     numbers = set(range(n, 1, -1))
     primes = []
@@ -48,20 +45,24 @@ def get_primes(n):
     return sorted(primes)
 
 
-n = 200*200
-origin = 1
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
 
-p = get_primes(n + origin)
+    n = 200*200
+    origin = 1
 
-fig, ax = plt.subplots()
-ax.plot(*ulam_spiral_coords(range(origin, n + origin), origin), 'r-', lw=.5)
-ax.plot(*ulam_spiral_coords(p, origin), 'k.', ms=1)
-ax.set_aspect('equal')
+    p = get_primes(n + origin)
 
-nroot = n**.5/2 + 1
-ax.set_xlim(-nroot, nroot)
-ax.set_ylim(-nroot, nroot)
-ax.axis('off')
-fig.tight_layout()
-# fig.savefig('ulam_spiral.pdf')
-fig.show()
+    fig, ax = plt.subplots()
+    ax.plot(*ulam_spiral_coords(range(origin, n + origin), origin),
+            'r-', lw=.5)
+    ax.plot(*ulam_spiral_coords(p, origin), 'k.', ms=1)
+    ax.set_aspect('equal')
+
+    nroot = n**.5/2 + 1
+    ax.set_xlim(-nroot, nroot)
+    ax.set_ylim(-nroot, nroot)
+    ax.axis('off')
+    fig.tight_layout()
+    # fig.savefig('ulam_spiral.pdf')
+    plt.show()

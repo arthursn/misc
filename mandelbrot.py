@@ -69,19 +69,20 @@ def onrescale(ax):
     fig.canvas.draw_idle()
 
 
-mset = Mandelbrot(size=1024, maxit=50)
-N = mset.compute()
+if __name__ == '__main__':
+    mset = Mandelbrot(size=1024, maxit=50)
+    N = mset.compute()
 
-fig1, ax1 = plt.subplots()
-ax1.imshow(N, origin='lower', extent=(-2, .5, -1.25, 1.25))
-ax1.callbacks.connect('xlim_changed', onrescale)
-ax1.callbacks.connect('ylim_changed', onrescale)
+    fig1, ax1 = plt.subplots()
+    ax1.imshow(N, origin='lower', extent=(-2, .5, -1.25, 1.25))
+    ax1.callbacks.connect('xlim_changed', onrescale)
+    ax1.callbacks.connect('ylim_changed', onrescale)
 
-# # budhabrot
-# mset = Mandelbrot(size=1024, maxit=100)
-# H, X, Y = mset.budhabrot(bins=(1024,1024))
+    # # budhabrot
+    # mset = Mandelbrot(size=1024, maxit=100)
+    # H, X, Y = mset.budhabrot(bins=(1024,1024))
 
-# fig2, ax2 = plt.subplots()
-# ax2.imshow(np.log(H), extent=(X.min(), X.max(), Y.min(), Y.max()))
+    # fig2, ax2 = plt.subplots()
+    # ax2.imshow(np.log(H), extent=(X.min(), X.max(), Y.min(), Y.max()))
 
-plt.show()
+    plt.show()
