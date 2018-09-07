@@ -1,0 +1,1 @@
+https://askubuntu.com/questions/68078/keyboard-shortcut-for-open-a-terminal-here
