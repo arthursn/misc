@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 from itertools import cycle
 
 
-class Body():
+class CelestialBody():
     def __init__(self, mass, position, velocity, history=False):
         self.mass = mass
         self.position = np.array(position)
@@ -29,7 +29,7 @@ class Body():
         self.velocity = velocity
 
 
-class System():
+class PlanetarySystem():
     G = 1.0  # gravitational constant
 
     def __init__(self):
@@ -40,7 +40,7 @@ class System():
         self.list_forces = np.zeros((0, 2))
 
     def add_body(self, body):
-        if isinstance(body, Body):
+        if isinstance(body, CelestialBody):
             self.list_bodies.append(body)
             self.nbodies += 1
             self.matrix_forces = np.zeros((self.nbodies, self.nbodies, 2))
@@ -49,7 +49,7 @@ class System():
             # Return index of body in self.list_bodies
             return self.nbodies - 1
         else:
-            print('{} is not a Body object'.format(body))
+            print('{} is not a CelestialBody object'.format(body))
 
     def get_force_two_bodies(self, body1, body2):
         r = body1.position - body2.position
@@ -80,18 +80,18 @@ if __name__ == '__main__':
     dt = .1
     plot_last = 200
 
-    sun = Body(1e0, [0, 0], [0, 0], True)
-    GM_root = (System.G*sun.mass)**.5
+    sun = CelestialBody(1e0, [0, 0], [0, 0], True)
+    GM_root = (PlanetarySystem.G*sun.mass)**.5
 
     # Set initial velocity that leads to an approximate circular orbit
-    # mercury = Body(5e-3, [0.4, 0], [0, .9*GM_root/0.4**.5], True)
-    # venus = Body(1e-4, [0.7, 0], [0, GM_root/0.7**.5], True)
-    earth = Body(1e-4, [1.0, 0], [0, GM_root/1.0**.5], True)
-    mars = Body(5e-2, [-1.5, 0], [0, -1.03*GM_root/1.5**.5], True)
-    ceres = Body(5e-2, [0, -3.0], [-0.98*GM_root/3.0**.5, 0], True)
-    jupiter = Body(1e-1, [0, 5.0], [1.05*GM_root/5.0**.5, 0], True)
+    # mercury = CelestialBody(5e-3, [0.4, 0], [0, .9*GM_root/0.4**.5], True)
+    # venus = CelestialBody(1e-4, [0.7, 0], [0, GM_root/0.7**.5], True)
+    earth = CelestialBody(1e-4, [1.0, 0], [0, GM_root/1.0**.5], True)
+    mars = CelestialBody(5e-2, [-1.5, 0], [0, -1.03*GM_root/1.5**.5], True)
+    ceres = CelestialBody(5e-2, [0, -3.0], [-0.98*GM_root/3.0**.5, 0], True)
+    jupiter = CelestialBody(1e-1, [0, 5.0], [1.05*GM_root/5.0**.5, 0], True)
 
-    solar_system = System()
+    solar_system = PlanetarySystem()
     solar_system.add_body(sun)
     # solar_system.add_body(mercury)
     # solar_system.add_body(venus)
