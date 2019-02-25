@@ -56,7 +56,7 @@ class PlanetarySystem():
         return self.G*body1.mass*body2.mass*r/np.linalg.norm(r)**3.
 
     def get_forces_all_bodies(self):
-        for i in range(self.nbodies):
+        for i in range(0, self.nbodies-1):
             for j in range(i+1, self.nbodies):
                 self.matrix_forces[i, j] = self.get_force_two_bodies(self.list_bodies[i], self.list_bodies[j])
                 self.matrix_forces[j, i] = -self.matrix_forces[i, j]
