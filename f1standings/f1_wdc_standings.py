@@ -139,7 +139,7 @@ if __name__ == '__main__':
             fig, ax = plt.subplots(figsize=(15, 10))
             races = np.arange(len(drstd.rounds))
             for i, (pts, driver) in enumerate(zip(map(np.cumsum, drstd.points), drstd.drivers)):
-                ax.plot(races, pts, label=driver)
+                ax.plot(races, pts, label=driver, lw=1)
 
             plt.xticks(races, drstd.rounds)
             ax.set_xlim(races[0], races[-1])
