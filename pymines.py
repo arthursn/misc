@@ -249,7 +249,7 @@ class Mines:
                 # Updates minefield
                 self.fig.canvas.draw()
                 self.fig.canvas.flush_events()
-        except TypeError:
+        except (TypeError, IndexError):
             pass
 
     def on_key_press(self, event):
