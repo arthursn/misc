@@ -181,7 +181,7 @@ class Mines:
             self.wrong_img.set_data(self.wrong)  # wrong guesses
             self.mines_pts = self.ax.plot(self.jj[self.mines & ~self.flags],
                                           self.ii[self.mines & ~self.flags],
-                                          'kX', ms=8)  # shows mines
+                                          'kX', ms=10)  # shows mines
             self.title_txt.set_text('You lose! Press F2 to start a new game')
 
     def reveal(self, i, j):
