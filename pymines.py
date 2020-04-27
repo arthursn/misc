@@ -16,7 +16,7 @@ class Mines:
         Width of minefield
     height : int
         Height of minefield
-    N_mines: int
+    n_mines: int
         Number of mines
     """
     __color_array = np.array([[0, 0, 0, 0], [.9, 0, 0, 1]])
@@ -35,14 +35,14 @@ class Mines:
               **dict.fromkeys(['intermediate', 'i', '1'], [16, 16, 40]),
               **dict.fromkeys(['expert', 'e', '2'], [30, 16, 99])}
 
-    def __init__(self, width, height, N_mines):
+    def __init__(self, width, height, n_mines):
         self.width = width
         self.height = height
-        self.N = self.width*self.height
-        self.N_mines = N_mines
-        if self.N_mines >= self.N:
-            raise Exception('N_mines must be < width*height')
-        self.N_not_mines = self.N - self.N_mines
+        self.n = self.width*self.height
+        self.n_mines = n_mines
+        if self.n_mines >= self.n:
+            raise Exception('n_mines must be < width*height')
+        self.n_not_mines = self.n - self.n_mines
 
         self.ii, self.jj = np.mgrid[:self.height, :self.width]
         self.i, self.j = self.ii.ravel(), self.jj.ravel()
@@ -69,7 +69,7 @@ class Mines:
 
         self.fig, self.ax = plt.subplots(figsize=(max(self.width*self.figsize['scale'], self.figsize['minw']),
                                                   max(self.height*self.figsize['scale'], self.figsize['minh'])))
-        self.fig.canvas.set_window_title(u'pymines {} × {} ({} mines)'.format(self.width, self.height, self.N_mines))
+        self.fig.canvas.set_window_title(u'pymines {} × {} ({} mines)'.format(self.width, self.height, self.n_mines))
 
         self.draw_minefield()
 
@@ -106,7 +106,7 @@ class Mines:
             self.cid_key = self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
 
         # Title text is number of flags/total mines
-        self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.N_mines))
+        self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
@@ -116,14 +116,14 @@ class Mines:
         Initializes new game. This function is called after first click
         in order to prevent the first click being straight over a mine
         """
-        population = set(range(self.N))
+        population = set(range(self.n))
         population.remove(i*self.width + j)  # removes initial click
-        idx = random.sample(population, self.N_mines)  # choose mines
+        idx = random.sample(population, self.n_mines)  # choose mines
 
         # Set mines
         self.mines[self.i[idx], self.j[idx]] = True
         # Set neighbor mines counter
-        for idx in range(self.N):
+        for idx in range(self.n):
             i, j = self.i[idx], self.j[idx]
             self.mines_count[i, j] = self.count_neighbor_mines(i, j)
         self.wrong = ~self.mines & self.flags
@@ -241,9 +241,9 @@ class Mines:
                     if not self.revealed[i, j]:
                         self.flags[i, j] = not self.flags[i, j]
                         self.flags_pts.set_data(*np.where(self.flags)[::-1])
-                        self.title_txt.set_text('{}/{}'.format(np.count_nonzero(self.flags), self.N_mines))
+                        self.title_txt.set_text('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
 
-                if np.count_nonzero(self.revealed) == self.N_not_mines:
+                if np.count_nonzero(self.revealed) == self.n_not_mines:
                     self.game_over(True)
 
                 # Updates minefield
