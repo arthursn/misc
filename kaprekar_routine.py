@@ -14,7 +14,7 @@ def kaprekar_routine(n, ndigits=4, nlist=[]):
         n = sorted(n)
         # join digits to form a number; reverse digits
         # to form another number. Subtract the former
-        # from the later.
+        # from the latter.
         n = int(''.join(n[::-1])) - int(''.join(n))
 
         # repeat until n appears again on the list. i.e.,
