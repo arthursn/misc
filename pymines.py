@@ -16,8 +16,10 @@ class Mines:
         Width of minefield
     height : int
         Height of minefield
-    n_mines: int
+    n_mines : int
         Number of mines
+    show : bool (optional)
+        If True, displays game when initialized 
     """
     __color_array = np.array([[0, 0, 0, 0], [.9, 0, 0, 1]])
     # Colormap object used for showing wrong cells
@@ -35,7 +37,7 @@ class Mines:
               **dict.fromkeys(['intermediate', 'i', '1'], [16, 16, 40]),
               **dict.fromkeys(['expert', 'e', '2'], [30, 16, 99])}
 
-    def __init__(self, width, height, n_mines):
+    def __init__(self, width, height, n_mines, show=True):
         self.width = width
         self.height = height
         self.n = self.width*self.height
@@ -73,7 +75,15 @@ class Mines:
 
         self.draw_minefield()
 
-        plt.show()
+        if show:
+            plt.show()
+
+    def refresh_canvas(self):
+        """
+        Updates minefield
+        """
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
     def draw_minefield(self):
         """
@@ -108,8 +118,7 @@ class Mines:
         # Title text is number of flags/total mines
         self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
 
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        self.refresh_canvas()
 
     def initialize(self, i, j):
         """
@@ -142,6 +151,8 @@ class Mines:
                                                       visible=False)
         self.is_initialized = True
 
+        self.refresh_canvas()
+
     def get_ij_neighbors(self, i, j):
         """
         Gets i, j coordinates (i is row, y coordinate, j is column, x 
@@ -169,24 +180,10 @@ class Mines:
         """
         return np.count_nonzero(self.flags[(i-1 if i > 0 else 0):i+2, (j-1 if j > 0 else 0):j+2])
 
-    def game_over(self, win=False):
+    def update_revealed(self, i, j):
         """
-        Callback when game is over
-        """
-        self.is_game_over = True
-        if win:
-            self.flags_pts.set_data(*np.where(self.mines)[::-1])  # shows mines marked with flags
-            self.title_txt.set_text('You win! Press F2 to start a new game')
-        else:
-            self.wrong_img.set_data(self.wrong)  # wrong guesses
-            self.mines_pts = self.ax.plot(self.jj[self.mines & ~self.flags],
-                                          self.ii[self.mines & ~self.flags],
-                                          'kX', ms=10)  # shows mines
-            self.title_txt.set_text('You lose! Press F2 to start a new game')
-
-    def reveal(self, i, j):
-        """
-        Reveals clicked cell and contiguous cells without mines
+        Updates revealed matrix by checking i, j cell and, recursevely,
+        the contiguous cells without mines
         """
         if not self.revealed[i, j]:
             # If not revealed cell
@@ -203,7 +200,7 @@ class Mines:
                     for _i, _j in self.get_ij_neighbors(i, j):
                         if self.mines_count[_i, _j] >= 0 and not self.revealed[_i, _j]:
                             self.flags[_i, _j] = False
-                            self.reveal(_i, _j)
+                            self.update_revealed(_i, _j)
                 elif self.mines_count[i, j] > 0:
                     self.flags[i, j] = False
                     self.mines_count_txt[i, j].set_visible(True)
@@ -213,60 +210,93 @@ class Mines:
             # neighbor cells
             for _i, _j in self.get_ij_neighbors(i, j):
                 if not self.flags[_i, _j] and not self.revealed[_i, _j]:
-                    self.reveal(_i, _j)
+                    self.update_revealed(_i, _j)
+
+    def reveal(self, i, j):
+        """
+        Reveals clicked cell and contiguous cells without mines
+        """
+        if not self.is_game_over:
+            if not self.flags[i, j]:
+                # Game is initialized after first click in order to prevent
+                # the first click being straight over a mine
+                if not self.is_initialized:
+                    self.initialize(i, j)
+
+                self.update_revealed(i, j)
+                self.revealed_img.set_data(self.revealed)
+                self.flags_pts.set_data(*np.where(self.flags)[::-1])
+                self.refresh_canvas()
+
+            if np.count_nonzero(self.revealed) == self.n_not_mines:
+                self.game_over(True)
+
+    def flag(self, i, j):
+        """
+        Flags i, j cell
+        """
+        # Does not allow to start game with a flag
+        if not self.is_game_over and self.is_initialized:
+            if not self.revealed[i, j]:
+                self.flags[i, j] = not self.flags[i, j]
+                self.flags_pts.set_data(*np.where(self.flags)[::-1])
+                self.title_txt.set_text('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
+                self.refresh_canvas()
+
+    def game_over(self, win=False):
+        """
+        Callback when game is over
+        """
+        self.is_game_over = True
+
+        if win:
+            self.flags_pts.set_data(*np.where(self.mines)[::-1])  # shows mines marked with flags
+            self.title_txt.set_text('You win! Press F2 to start a new game')
+        else:
+            self.wrong_img.set_data(self.wrong)  # wrong guesses
+            self.mines_pts = self.ax.plot(self.jj[self.mines & ~self.flags],
+                                          self.ii[self.mines & ~self.flags],
+                                          'kX', ms=10)  # shows mines
+            self.title_txt.set_text('You lose! Press F2 to start a new game')
+
+        self.refresh_canvas()
 
     def on_mouse_click(self, event):
         """
         Callback when mouse is clicked
         """
-        try:
-            # i, j coordinates of the click event
-            i = np.round(event.ydata).astype(int)
-            j = np.round(event.xdata).astype(int)
+        if not self.is_game_over:
+            try:
+                # i, j coordinates of the click event
+                i = np.round(event.ydata).astype(int)
+                j = np.round(event.xdata).astype(int)
 
-            # Games is initialized after first click in order to prevent
-            # the first click being straight over a mine
-            if not self.is_initialized:
-                self.initialize(i, j)
-
-            if not self.is_game_over:
                 # Left button
                 if event.button == 1 or event.button == 2:
-                    if not self.flags[i, j]:
-                        self.reveal(i, j)
-                        self.revealed_img.set_data(self.revealed)
-                        self.flags_pts.set_data(*np.where(self.flags)[::-1])
+                    self.reveal(i, j)
+
                 # Right button
                 elif event.button == 3:
-                    if not self.revealed[i, j]:
-                        self.flags[i, j] = not self.flags[i, j]
-                        self.flags_pts.set_data(*np.where(self.flags)[::-1])
-                        self.title_txt.set_text('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
+                    self.flag(i, j)
 
-                if np.count_nonzero(self.revealed) == self.n_not_mines:
-                    self.game_over(True)
-
-                # Updates minefield
-                self.fig.canvas.draw()
-                self.fig.canvas.flush_events()
-        except (TypeError, IndexError):
-            pass
+            except (TypeError, IndexError):
+                pass
 
     def on_key_press(self, event):
         """
         Callback when key is pressed
         """
-        # F2 for reseting the game
+        # F2 for starting new game
         if event.key == 'f2':
             self.draw_minefield()
 
     @staticmethod
-    def new_game(level='beginner'):
+    def new_game(level='beginner', show=True):
         """
         Static method for initializing the game in pre-defined levels
         (beginner, intermediate, expert)
         """
-        return Mines(*Mines.levels[level])
+        return Mines(*Mines.levels[level], show)
 
 
 if __name__ == '__main__':
