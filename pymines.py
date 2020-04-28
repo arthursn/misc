@@ -5,6 +5,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 
+__all__ = ['Mines']
+
+
+class _CoordsFormatter():
+    """
+    Formats coordinates and z values in interactive plot mode
+    """
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def __call__(self, x, y):
+        string = ''
+        try:
+            i = int(round(y))
+            j = int(round(x))
+            if i >= 0 and i < self.height and j >= 0 and j < self.width:
+                string = '    i = {}, j = {}'.format(i, j)
+        except:
+            pass
+        return string
+
 
 class Mines:
     """
@@ -25,7 +48,7 @@ class Mines:
     # Colormap object used for showing wrong cells
     cmap_reds_alpha = LinearSegmentedColormap.from_list(name='Reds_alpha', colors=__color_array)
 
-    figsize = dict(minw=4, minh=3, scale=.7)
+    figsize = {'minw': 4, 'minh': 3, 'scale': .7}
 
     # Color dictionary for coloring the revealed cells according with number
     # of mines in the neighboring cells
@@ -110,10 +133,11 @@ class Mines:
         for i in np.arange(-.5, self.height):
             self.ax.plot([-.5, self.width-.5], [i, i], lw=.5, color='k')
 
-        # Connects mouse click and key press event handlers
+        # Connects mouse click and key press event handlers and coordinates formatter
         if self.cid_mouse is None:
             self.cid_mouse = self.fig.canvas.mpl_connect('button_press_event', self.on_mouse_click)
             self.cid_key = self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+            self.ax.format_coord = _CoordsFormatter(self.width, self.height)
 
         # Title text is number of flags/total mines
         self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
@@ -268,8 +292,8 @@ class Mines:
         if not self.is_game_over:
             try:
                 # i, j coordinates of the click event
-                i = np.round(event.ydata).astype(int)
-                j = np.round(event.xdata).astype(int)
+                i = int(round(event.ydata))
+                j = int(round(event.xdata))
 
                 # Left button
                 if event.button == 1 or event.button == 2:
