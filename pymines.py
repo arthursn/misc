@@ -10,7 +10,7 @@ __all__ = ['Mines']
 
 class _CoordsFormatter():
     """
-    Formats coordinates and z values in interactive plot mode
+    Formats coordinates in the interactive plot mode
     """
 
     def __init__(self, width, height):
@@ -44,10 +44,11 @@ class Mines:
     show : bool (optional)
         If True, displays game when initialized 
     """
-    __color_array = np.array([[0, 0, 0, 0], [.9, 0, 0, 1]])
     # Colormap object used for showing wrong cells
-    cmap_reds_alpha = LinearSegmentedColormap.from_list(name='Reds_alpha', colors=__color_array)
+    cmap_reds_alpha = LinearSegmentedColormap.from_list(name='Reds_alpha',
+                                                        colors=[[0, 0, 0, 0], [.9, 0, 0, 1]])
 
+    # Figure dimensions (min width and height in inches and scale factor)
     figsize = {'minw': 4, 'minh': 3, 'scale': .7}
 
     # Color dictionary for coloring the revealed cells according with number
@@ -55,10 +56,12 @@ class Mines:
     color_dict = {1: [0, 0, 1], 2: [0, 1, 0], 3: [1, 0, 0], 4: [0, 0, .5],
                   5: [.5, 0, 0], 6: [0, 0, .66], 7: [0, 0, .33], 8: [0, 0, 0]}
 
-    # Pre-defined levels
-    levels = {**dict.fromkeys(['beginner', 'b', '0'], [8, 8, 10]),
-              **dict.fromkeys(['intermediate', 'i', '1'], [16, 16, 40]),
-              **dict.fromkeys(['expert', 'e', '2'], [30, 16, 99])}
+    # Pre-defined levels (level: [width, height, mines])
+    levels = {0: [8, 8, 10], 1: [16, 16, 40], 2: [30, 16, 99]}
+    # Aliases for the levels
+    level_aliases = {**dict.fromkeys(['beginner', 'b', '0', 0], 0),
+                     **dict.fromkeys(['intermediate', 'i', '1', 1], 1),
+                     **dict.fromkeys(['expert', 'e', '2', 2], 2)}
 
     def __init__(self, width, height, n_mines, show=True):
         self.width = width
@@ -120,18 +123,18 @@ class Mines:
         self.flags[:, :] = False
         self.revealed[:, :] = False
 
-        # Clears plot window, sets limits
+        # Clears plot, sets limits
         self.ax.clear()
         self.ax.set_aspect('equal')
         self.ax.axis('off')
         self.ax.set_xlim(-.6, self.width - .4)
         self.ax.set_ylim(-.6, self.height - .4)
 
-        # Draw grid lines
+        # Draws grid lines
         for j in np.arange(-.5, self.width):
-            self.ax.plot([j, j], [-.5, self.height-.5], lw=.5, color='k')
+            self.ax.plot([j, j], [-.5, self.height-.5], lw=1, color='k')
         for i in np.arange(-.5, self.height):
-            self.ax.plot([-.5, self.width-.5], [i, i], lw=.5, color='k')
+            self.ax.plot([-.5, self.width-.5], [i, i], lw=1, color='k')
 
         # Connects mouse click and key press event handlers and coordinates formatter
         if self.cid_mouse is None:
@@ -139,7 +142,7 @@ class Mines:
             self.cid_key = self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
             self.ax.format_coord = _CoordsFormatter(self.width, self.height)
 
-        # Title text is number of flags/total mines
+        # Title text: number of flags/total mines
         self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
 
         self.refresh_canvas()
@@ -153,12 +156,13 @@ class Mines:
         population.remove(i*self.width + j)  # removes initial click
         idx = random.sample(population, self.n_mines)  # choose mines
 
-        # Set mines
+        # Sets mines
         self.mines[self.i[idx], self.j[idx]] = True
-        # Set neighbor mines counter
+        # Sets neighbor mines counter
         for idx in range(self.n):
             i, j = self.i[idx], self.j[idx]
             self.mines_count[i, j] = self.count_neighbor_mines(i, j)
+        # Sets wrong guesses
         self.wrong = ~self.mines & self.flags
 
         # Initializes plot objects
@@ -166,8 +170,9 @@ class Mines:
         self.revealed_img = self.ax.imshow(self.revealed, vmin=0, vmax=4, cmap='gray_r')
         self.wrong_img = self.ax.imshow(self.wrong, vmin=0, vmax=1, cmap=self.cmap_reds_alpha)
 
-        # Initializes text objects of neighbor mines counter. They're initially
-        # set as non visible
+        # Initializes text objects of neighbor mines counter. They're
+        # initially set as non visible. As the cells are revealed, their
+        # status is changed to visible
         p_count = self.mines_count > 0
         for i, j, count in zip(self.ii[p_count], self.jj[p_count], self.mines_count[p_count]):
             self.mines_count_txt[i, j] = self.ax.text(j, i, str(count), fontweight='bold',
@@ -179,8 +184,8 @@ class Mines:
 
     def get_ij_neighbors(self, i, j):
         """
-        Gets i, j coordinates (i is row, y coordinate, j is column, x 
-        coordinate) of 
+        Gets the i, j coordinates (i is row, y coordinate, j is column, 
+        x coordinate) of the neighboring cells
         """
         ii, jj = np.mgrid[i-1:i+2, j-1:j+2]
         ii, jj = ii.ravel(), jj.ravel()
@@ -191,7 +196,7 @@ class Mines:
 
     def count_neighbor_mines(self, i, j):
         """
-        Counts number of mines in the neighboring cells
+        Counts the number of mines in the neighboring cells
         """
         n_neighbor_mines = -1
         if not self.mines[i, j]:
@@ -206,7 +211,7 @@ class Mines:
 
     def update_revealed(self, i, j):
         """
-        Updates revealed matrix by checking i, j cell and, recursevely,
+        Updates revealed cells by checking i, j cell and, recursevely,
         the contiguous cells without mines
         """
         if not self.revealed[i, j]:
@@ -226,12 +231,20 @@ class Mines:
                             self.flags[_i, _j] = False
                             self.update_revealed(_i, _j)
                 elif self.mines_count[i, j] > 0:
+                    # The line below only makes sense when in the middle of the
+                    # recursion. E.g., a cell is flagged, but it is part of a
+                    # big blob that's going to be revealed. The game doesn't
+                    # punish the player in this scenario. This behavior has been
+                    # copied from gnome-mines
                     self.flags[i, j] = False
+                    # Reveals mine count
                     self.mines_count_txt[i, j].set_visible(True)
         elif self.mines_count[i, j] == self.count_neighbor_flags(i, j):
-            # If revealed cell is clicked, if number neighboring flags is the
-            # same as the number of neighboring mines, then reveals concealed
-            # neighbor cells
+            # If cell that's already revealed is clicked and the number of
+            # neighboring flags is the same as the number of neighboring
+            # mines, then the hidden neighbor cells are recursevely
+            # revealed. Of course, if any flag guess is wrong, the game is
+            # over.
             for _i, _j in self.get_ij_neighbors(i, j):
                 if not self.flags[_i, _j] and not self.revealed[_i, _j]:
                     self.update_revealed(_i, _j)
@@ -259,7 +272,7 @@ class Mines:
         """
         Flags i, j cell
         """
-        # Does not allow to start game with a flag
+        # Does not allow starting a game with a flag
         if not self.is_game_over and self.is_initialized:
             if not self.revealed[i, j]:
                 self.flags[i, j] = not self.flags[i, j]
@@ -320,15 +333,17 @@ class Mines:
         Static method for initializing the game in pre-defined levels
         (beginner, intermediate, expert)
         """
-        return Mines(*Mines.levels[level], show)
+        return Mines(*Mines.levels[Mines.level_aliases[level]], show)
 
 
 if __name__ == '__main__':
     import sys
 
     if len(sys.argv) == 2:
+        # Argument passed is level
         game = Mines.new_game(sys.argv[1])
     elif len(sys.argv) == 4:
+        # Arguments passed are number width, height, and number of mines
         game = Mines(*map(int, sys.argv[1:]))
     else:
         if len(sys.argv) > 1:
