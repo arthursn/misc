@@ -30,9 +30,6 @@ def htmltable2list(table):
 
 class DriversStandings(object):
     def __init__(self, year):
-        if int(year) <= 1990:
-            raise Exception('Not supported for championships held before 1991')
-
         self.year = int(year)
 
         self.rounds = []
@@ -40,18 +37,14 @@ class DriversStandings(object):
         self.positions = []
         self.points = []
 
-        self._p2points = {}
-
-        self.set_p2points()
-
-    def set_p2points(self):
         if self.year >= 2010:
-            p2points = {1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1}
+            self._p2points = {1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1}
         elif self.year >= 2003:
-            p2points = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1}
+            self._p2points = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1}
         elif self.year >= 1991:
-            p2points = {1: 10, 2: 6, 3: 4, 4: 3, 5: 2, 6: 1}
-        self._p2points = p2points
+            self._p2points = {1: 10, 2: 6, 3: 4, 4: 3, 5: 2, 6: 1}
+        else:
+            raise Exception('Not supported for championships held before 1991')
 
     def p2points(self, p, round, fastest_lap=False):
         try:
@@ -84,7 +77,8 @@ def scrape_wiki_f1_standings(year):
                    'Drivers']
 
         for sectionname in lookfor:
-            drstd_sect = [h3tag for h3tag in soup.find_all(['h2', 'h3']) if h3tag.find(text=sectionname)]
+            drstd_sect = [h3tag for h3tag in soup.find_all(
+                ['h2', 'h3']) if h3tag.find(text=sectionname)]
 
             if len(drstd_sect) > 0:
                 drstd_sect = drstd_sect[0]
@@ -108,13 +102,13 @@ def scrape_wiki_f1_standings(year):
                     pos = []
                     pts = []
                     for rnd, p in zip(drstd.rounds, row[2:-1]):
-                        fastest_lap = 'F' in p
-                        p = ''.join(filter(isint, p[0]))
                         try:
+                            fastest_lap = 'F' in p
+                            p = ''.join(filter(isint, p[0]))
                             p = int(p)
                             pos.append(p)
                             pts.append(drstd.p2points(p, rnd, fastest_lap))
-                        except ValueError:
+                        except (IndexError, ValueError):
                             pos.append(None)
                             pts.append(0)
                     drstd.positions.append(pos)
@@ -126,29 +120,37 @@ def scrape_wiki_f1_standings(year):
 
 
 if __name__ == '__main__':
-    import sys
-    import os
+    import argparse
     import numpy as np
     import matplotlib.pyplot as plt
 
-    if len(sys.argv) > 1:
-        year = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('years', nargs='+')
+    parser.add_argument('-s', '--save', action='store_true')
+
+    args = parser.parse_args()
+
+    for year in args.years:
         drstd = scrape_wiki_f1_standings(year)
 
         if len(drstd.rounds) > 0:
             fig, ax = plt.subplots(figsize=(15, 10))
             races = np.arange(len(drstd.rounds))
+
             for i, (pts, driver) in enumerate(zip(map(np.cumsum, drstd.points), drstd.drivers)):
                 ax.plot(races, pts, label=driver, lw=1)
 
-            plt.xticks(races, drstd.rounds)
+            ax.set_xticks(races)
+            ax.set_xticklabels(drstd.rounds)
             ax.set_xlim(races[0], races[-1])
             ax.set_xlabel('Round')
             ax.set_ylabel('Points')
             ax.set_title('{} FIA Formula One World Drivers\'s Championship standings'.format(year))
             ax.legend(loc='upper left', ncol=2)
 
-            fig.savefig('f1{}.pdf'.format(year))
+            if args.save:
+                fig.savefig('f1{}.pdf'.format(year))
+
             plt.show()
         else:
             print('No data found')
