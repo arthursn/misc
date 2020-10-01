@@ -7,25 +7,25 @@ class Transformation:
         return self.A.dot(xy) + self.B
 
 
-class f1(Transformation):
+class F1(Transformation):
     A = np.array([[0,   0],
                   [0, 0.16]])
     B = np.array([0,  0])
 
 
-class f2(Transformation):
+class F2(Transformation):
     A = np.array([[0.85, 0.04],
                   [-0.04, 0.85]])
     B = np.array([0, 1.60])
 
 
-class f3(Transformation):
+class F3(Transformation):
     A = np.array([[0.20, -0.26],
                   [0.23, 0.22]])
     B = np.array([0, 1.60])
 
 
-class f4(Transformation):
+class F4(Transformation):
     A = np.array([[-0.15, 0.28],
                   [0.26, 0.24]])
     B = np.array([0, 0.44])
@@ -33,7 +33,7 @@ class f4(Transformation):
 
 class BarnsleyFern:
     def __init__(self):
-        self.f = [f1(), f2(), f3(), f4()]
+        self.f = [F1(), F2(), F3(), F4()]
         self.p = [0.01, 0.85, 0.07, 0.07]
         self._xy = [[0, 0]]
 
@@ -45,7 +45,7 @@ class BarnsleyFern:
         self._xy.append(np.random.choice(self.f, p=self.p)(*self._xy[-1]))
 
     def generate(self, niterations):
-        for n in range(niterations):
+        for n in range(int(niterations)):
             self.iteration()
 
     def plot(self, ax=None, **kwargs):
@@ -61,6 +61,6 @@ class BarnsleyFern:
 
 if __name__ == '__main__':
     fern = BarnsleyFern()
-    fern.generate(100000)
+    fern.generate(1e5)
     fern.plot()
     plt.show()
