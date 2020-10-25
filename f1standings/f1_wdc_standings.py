@@ -121,11 +121,13 @@ def scrape_wiki_f1_standings(year):
 
 if __name__ == '__main__':
     import argparse
+    import datetime
     import numpy as np
     import matplotlib.pyplot as plt
 
+    now = datetime.datetime.now()
     parser = argparse.ArgumentParser()
-    parser.add_argument('years', nargs='+')
+    parser.add_argument('years', nargs='*', default=[now.year])
     parser.add_argument('-s', '--save', action='store_true')
 
     args = parser.parse_args()
