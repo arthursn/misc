@@ -30,7 +30,7 @@ def htmltable2list(table):
 
 class DriversStandings(object):
     def __init__(self, year):
-        self.year = int(year)
+        self.year = year
 
         self.rounds = []
         self.drivers = []
@@ -59,7 +59,7 @@ class DriversStandings(object):
 
 
 def scrape_wiki_f1_standings(year):
-    url = 'https://en.wikipedia.org/wiki/{}_FIA_Formula_One_World_Championship'.format(year)
+    url = 'https://en.wikipedia.org/wiki/{:d}_FIA_Formula_One_World_Championship'.format(year)
     r = requests.get(url)
 
     drstd = DriversStandings(year)
@@ -71,7 +71,7 @@ def scrape_wiki_f1_standings(year):
                    'Drivers\' Championship standings',
                    'Drivers Championship standings',
                    'World Drivers\' Championship final standings',
-                   '{} Drivers\' Championship final standings'.format(year),
+                   '{:d} Drivers\' Championship final standings'.format(year),
                    'World Drivers\' Championship standings',
                    'Drivers\' Championship',
                    'Drivers']
@@ -127,12 +127,15 @@ if __name__ == '__main__':
 
     now = datetime.datetime.now()
     parser = argparse.ArgumentParser()
-    parser.add_argument('years', nargs='*', default=[now.year])
+    parser.add_argument('years', nargs='*', type=int, default=[now.year])
     parser.add_argument('-s', '--save', action='store_true')
 
     args = parser.parse_args()
 
     for year in args.years:
+        if year <= 0:
+            year += now.year
+
         drstd = scrape_wiki_f1_standings(year)
 
         if len(drstd.rounds) > 0:
