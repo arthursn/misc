@@ -159,8 +159,7 @@ class Mines:
         # Sets mines
         self.mines[self.i[idx], self.j[idx]] = True
         # Sets neighbor mines counter
-        for idx in range(self.n):
-            i, j = self.i[idx], self.j[idx]
+        for i, j in zip(self.i, self.j):
             self.mines_count[i, j] = self.count_neighbor_mines(i, j)
         # Sets wrong guesses
         self.wrong = ~self.mines & self.flags
@@ -222,7 +221,7 @@ class Mines:
                 self.wrong[i, j] = True
                 self.game_over()
             else:
-                # If correct guess
+                # If guess is correct
                 self.revealed[i, j] = True
                 if self.mines_count[i, j] == 0:
                     # Recursively looks for contiguous cells without mines
@@ -231,11 +230,11 @@ class Mines:
                             self.flags[_i, _j] = False
                             self.update_revealed(_i, _j)
                 elif self.mines_count[i, j] > 0:
-                    # The line below only makes sense when in the middle of the
-                    # recursion. E.g., a cell is flagged, but it is part of a
-                    # big blob that's going to be revealed. The game doesn't
-                    # punish the player in this scenario. This behavior has been
-                    # copied from gnome-mines
+                    # The line below only makes sense when it's in the middle of the
+                    # recursion. For instance, a cell is flagged, but it is part of a
+                    # big blob that's going to be revealed. The game doesn't punish
+                    # the player in this scenario. This behavior has been copied
+                    # from gnome-mines
                     self.flags[i, j] = False
                     # Reveals mine count
                     self.mines_count_txt[i, j].set_visible(True)
@@ -243,7 +242,7 @@ class Mines:
             # If cell that's already revealed is clicked and the number of
             # neighboring flags is the same as the number of neighboring
             # mines, then the hidden neighbor cells are recursevely
-            # revealed. Of course, if any flag guess is wrong, the game is
+            # revealed. Evidently, if any flag guess is wrong, the game is
             # over.
             for _i, _j in self.get_ij_neighbors(i, j):
                 if not self.flags[_i, _j] and not self.revealed[_i, _j]:
