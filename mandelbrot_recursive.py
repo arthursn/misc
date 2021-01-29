@@ -1,7 +1,6 @@
-import time
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector
+
 
 def f(c, maxit, z=0, it=0):
     """
@@ -13,36 +12,28 @@ def f(c, maxit, z=0, it=0):
         return it
 
 
-fig, ax = plt.subplots()
+if __name__ == '__main__':
+    realrng = [-2, .75]
+    imagrng = [-1.5, 1.5]
+    size = 512
+    maxit = 100
 
-realrng = [-2, .75]
-imagrng = [-1.5, 1.5]
-# realrng = [-.15, -.10]
-# imagrng = [-1, -.975]
-size = 512
-maxit = 100
+    # real and imag parts grid
+    real, imag = np.meshgrid(np.linspace(*realrng, size),
+                             np.linspace(*imagrng, size))
 
-imin, imax = imagrng   # y-axis, rows
-rmin, rmax = realrng   # x-axis, columns
-step = max((imax-imin)/(size-1), (rmax-rmin)/(size-1))
+    # c values
+    c_set = real + imag*1.j
+    c_shape = c_set.shape
 
-imag, real = np.mgrid[imin:imax:step, rmin:rmax:step]
-c_set = real + imag*1.j
-c_shape = c_set.shape
+    its = []
+    for c in c_set.ravel():
+        its.append(f(c, maxit))
 
-its = []
+    its = np.array(its).reshape(c_shape)
 
-t0 = time.time()
+    fig, ax = plt.subplots()
+    ax.pcolormesh(real, imag, its)
+    ax.set_aspect('equal')
 
-for c in c_set.ravel():
-    its.append(f(c, maxit))
-
-print(time.time() - t0)
-
-its = np.array(its).reshape(c_shape)
-
-ax.pcolormesh(real, imag, its)
-ax.set_aspect('equal')
-
-plt.show()
-
+    plt.show()
