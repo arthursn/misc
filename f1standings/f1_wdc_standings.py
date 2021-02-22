@@ -2,13 +2,12 @@
 
 import requests
 from bs4 import BeautifulSoup
-from bs4.element import NavigableString
 
 
 def isint(s):
     try:
         int(s)
-    except:
+    except Exception:
         return False
     return True
 
