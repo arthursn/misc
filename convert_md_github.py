@@ -62,7 +62,7 @@ if __name__ == '__main__':
                         help='extension of output file')
     args = parser.parse_args()
 
-    url_converter = 'https://render.githubusercontent.com/render/math?math='
+    render_url = 'https://render.githubusercontent.com/render/math?math='
 
     for fname in args.filenames:
         fnametmp = fname + '.tmp'
@@ -73,14 +73,14 @@ if __name__ == '__main__':
         # Convert inline equations. Result goes in temp file
         with open(fname, 'r') as fin, open(fnametmp, 'w') as fout:
             translate_equations('$`', '`$',
-                                '<img src="' + url_converter,
+                                '<img src="' + render_url,
                                 '" style="display: inline; margin-top: 0;"/>',
                                 fin, fout)
 
         # Convert block equations
         with open(fnametmp, 'r') as fin, open(fnameout, 'w') as fout:
             translate_equations('```math', '```',
-                                '<p align="center"><img src="' + url_converter,
+                                '<p align="center"><img src="' + render_url,
                                 '"/></p>',
                                 fin, fout)
 
