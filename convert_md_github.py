@@ -7,14 +7,19 @@ A. Nishikawa 2020
 """
 
 import os
+import sys
 import urllib.parse
 import argparse
 
+render_url = 'https://render.githubusercontent.com/render/math?math='
 
-def translate_equations(ocl, ccl, new_ocl, new_ccl, lines, encode_url=True):
+
+def translate_equations(lines, ocl, ccl, new_ocl, new_ccl, encode_url=True):
     """
     Translate LaTeX equations
 
+    lines: list of str
+        Text as list of strings containing file lines
     ocl: str
         Opening equation clause, e.g., $` or math```
     ccl: str
@@ -23,10 +28,9 @@ def translate_equations(ocl, ccl, new_ocl, new_ccl, lines, encode_url=True):
         New opening clause
     new_ccl: str
         New closing clause
-    fin: TextIOWrapper
-        Input file stream
-    fout: TextIOWrapper
-        Output file stream
+    encode_url: bool (optional)
+        If True, encodes math expression for url
+        Default: True
     """
     new_lines = []
     len_ocl, len_ccl = len(ocl),  len(ccl)
@@ -71,11 +75,6 @@ if __name__ == '__main__':
                         help='activate debug mode')
     args = parser.parse_args()
 
-    if args.debug:
-        import sys
-
-    render_url = 'https://render.githubusercontent.com/render/math?math='
-
     for fname in args.filenames:
         lines = []
         with open(fname, 'r') as f:
@@ -84,22 +83,21 @@ if __name__ == '__main__':
 
         if args.debug:
             # Convert inline equations. Result goes in temp file
-            lines = translate_equations('$`', '`$', '\033[1;31m', '\033[0m', lines, False)
+            lines = translate_equations(lines, '$`', '`$', '\033[1;31m', '\033[0m', False)
             # Convert block equations
-            lines = translate_equations('```math', '```', '\033[1;32m', '\033[0m', lines, False)
+            lines = translate_equations(lines, '```math', '```', '\033[1;32m', '\033[0m', False)
 
             for line in lines:
                 sys.stdout.write(line)
+            sys.stdout.write('\n')
         else:
             # Convert inline equations. Result goes in temp file
-            lines = translate_equations('$`', '`$',
+            lines = translate_equations(lines, '$`', '`$',
                                         '<img src="' + render_url,
-                                        '" style="display: inline; margin-top: 0;"/>',
-                                        lines)
+                                        '" style="display: inline; margin-top: 0;"/>')
             # Convert block equations
-            lines = translate_equations('```math', '```',
-                                        '<p align="center"><img src="' + render_url, '"/></p>',
-                                        lines)
+            lines = translate_equations(lines, '```math', '```',
+                                        '<p align="center"><img src="' + render_url, '"/></p>')
 
             if args.overwrite:
                 fnameout = fname
