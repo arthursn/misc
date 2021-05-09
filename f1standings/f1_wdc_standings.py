@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 import requests
 from bs4 import BeautifulSoup
 
@@ -76,8 +77,8 @@ def scrape_wiki_f1_standings(year):
                    'Drivers']
 
         for sectionname in lookfor:
-            drstd_sect = [h3tag for h3tag in soup.find_all(
-                ['h2', 'h3']) if h3tag.find(text=sectionname)]
+            drstd_sect = [h3tag for h3tag in soup.find_all('h3')
+                          if h3tag.find(text=re.compile((sectionname), re.IGNORECASE))]
 
             if len(drstd_sect) > 0:
                 drstd_sect = drstd_sect[0]
@@ -97,6 +98,9 @@ def scrape_wiki_f1_standings(year):
                 rows = htmltable2list(posdr_table)
                 drstd.rounds = [r[0] for r in rows[0][2:-1]]
                 for row in rows[1:-1]:
+                    if (row[1][0].lower() == 'driver'):
+                        continue
+
                     drstd.drivers.append(row[1][0])
                     pos = []
                     pts = []
