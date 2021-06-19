@@ -157,7 +157,7 @@ if __name__ == '__main__':
             ax.legend(loc='upper left', ncol=2)
 
             if args.save:
-                fig.savefig('f1{}.pdf'.format(year))
+                fig.savefig('f1_{}.png'.format(year))
 
             plt.show()
         else:
