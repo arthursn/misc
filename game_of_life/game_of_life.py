@@ -126,7 +126,8 @@ class GameOfLife(object):
 
         return gol
 
-    def animate(self, basefname=None, cycle=False, nframes=None, freezeframes=0, interval=80):
+    def animate(self, basefname=None, cycle=False, nframes=None, freezeframes=0, interval=80,
+                dpi=90):
         """
         Animate Game of Life
 
@@ -188,12 +189,12 @@ class GameOfLife(object):
             savefig_kwargs = dict(pad_inches=0)
             if cycle:
                 fout_tmp = Path('gol_tmp.gif')
-                ani.save(fout_tmp, writer='imagemagick', savefig_kwargs=savefig_kwargs)
+                ani.save(fout_tmp, writer='imagemagick', dpi=dpi, savefig_kwargs=savefig_kwargs)
                 subprocess.call(f'convert {fout_tmp} -coalesce -duplicate 1,-2-1 {fout}',
                                 shell=True)
                 fout_tmp.unlink()
             else:
-                ani.save(fout, writer='imagemagick', savefig_kwargs=savefig_kwargs)
+                ani.save(fout, writer='imagemagick', dpi=dpi, savefig_kwargs=savefig_kwargs)
 
         return ani
 
@@ -210,6 +211,8 @@ if __name__ == '__main__':
                         'frames at the beginning of the animation')
     parser.add_argument('-i', '--interval', type=float, default=80, help='interval (in '
                         'milliseconds) between frames')
+    parser.add_argument('-d', '--dpi', type=float, default=90, help='output gif resolution in '
+                        'pixels per inch')
     args = parser.parse_args()
 
     if len(args.fname) == 0:
@@ -235,11 +238,11 @@ if __name__ == '__main__':
         cells_init[3:3+2, 35:35+2] = True
         gol.initialize_cells(cells_init)
 
-        ani = gol.animate('glider' if args.save else None, args.cycle,
-                          args.nframes, args.freezeframes, args.interval)
+        ani = gol.animate('glider' if args.save else None, args.cycle, args.nframes,
+                          args.freezeframes, args.interval, args.dpi)
     else:
         for fname in args.fname:
             gol = GameOfLife.from_image(fname)
-            ani = gol.animate(fname if args.save else None, args.cycle,
-                              args.nframes, args.freezeframes, args.interval)
+            ani = gol.animate(fname if args.save else None, args.cycle, args.nframes,
+                              args.freezeframes, args.interval, args.dpi)
     plt.show()
