@@ -16,7 +16,7 @@ def scrape_names(names):
         try:
             f = open('json/{}.json'.format(name))
             txt = f.read()
-        except:
+        except Exception:
             url = 'https://servicodados.ibge.gov.br/api/v2/censos/nomes/' + name
             r = requests.get(url)
             if r.status_code == 200:  # success!
@@ -76,22 +76,22 @@ class MetadataIBGE(object):
     def parse_dict_meta(self, metadict):
         try:
             self.name = metadict['nome']
-        except:
+        except Exception:
             pass
 
         try:
             self.name_search = metadict['nome_busca']
-        except:
+        except Exception:
             pass
 
         try:
             self.location = metadict['localidade']
-        except:
+        except Exception:
             pass
 
         try:
             res = metadict['res']
-        except:
+        except Exception:
             pass
         else:
             self.frequency = []
@@ -155,53 +155,41 @@ def merge_metadata_group_names(metalist, name_display=None):
     return newmeta
 
 
-def get_option(args, option):
-    hasit = False
-    try:
-        idx = args.index(option)
-    except:
-        pass
-    else:
-        hasit = True
-        args.pop(idx)
-    return args, hasit
-
-
 if __name__ == '__main__':
-    import sys
+    import argparse
 
-    args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('names', nargs='+')
+    parser.add_argument('-c', '--cum', action='store_true')
+    parser.add_argument('-s', '--sort', action='store_true')
+    parser.add_argument('-l', '--log', action='store_true')
+    args = parser.parse_args()
 
-    args, cum = get_option(args, '-c')
-    args, sort = get_option(args, '-s')
-    args, log = get_option(args, '-l')
+    metalist = scrape_names(args.names)
 
-    if len(args) > 0:
-        metalist = scrape_names(args)
+    fig, ax = plt.subplots()
 
-        fig, ax = plt.subplots()
+    order = range(len(metalist))
+    if args.sort:
+        criteria = []
+        for meta in metalist:
+            criteria.append(meta.cum_frequency[-1])
+        order = np.argsort(criteria)[::-1]
 
-        order = range(len(metalist))
-        if sort:
-            criteria = []
-            for meta in metalist:
-                criteria.append(meta.cum_frequency[-1])
-            order = np.argsort(criteria)[::-1]
+    for i in order:
+        metalist[i].plot_frequency(ax=ax, cum=args.cum, marker='o')
 
-        for i in order:
-            metalist[i].plot_frequency(ax=ax, cum=cum, marker='o')
+    ax.set_xlabel('Ano censo')
 
-        ax.set_xlabel('Ano censo')
+    if args.cum:
+        ax.set_ylabel(u'Número total de pessoas')
+    else:
+        ax.set_ylabel(u'Variação em relação à década anterior')
 
-        if cum:
-            ax.set_ylabel(u'Número total de pessoas')
-        else:
-            ax.set_ylabel(u'Variação em relação à década anterior')
+    if args.log:
+        ax.set_yscale('log')
+        ax.set_ylim(1, )
 
-        if log:
-            ax.set_yscale('log')
-            ax.set_ylim(1, )
+    plt.legend(loc='lower left')
 
-        plt.legend(loc='lower left')
-
-        plt.show()
+    plt.show()
