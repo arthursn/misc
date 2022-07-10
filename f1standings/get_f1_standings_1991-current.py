@@ -9,24 +9,34 @@ if __name__ == '__main__':
     for year in range(1991, now.year + 1):
         print(year)
 
-        drstd = scrape_wiki_f1_standings(year)
+        dr_std = scrape_wiki_f1_standings(year)
 
-        if len(drstd.rounds) > 0:
-            fig, ax = plt.subplots(figsize=(15, 10))
-            races = np.arange(len(drstd.rounds))
-            for i, (pts, driver) in enumerate(zip(map(np.cumsum, drstd.points), drstd.drivers)):
-                ax.plot(races, pts, label=driver)
-                # if i >= (25-1):
-                #     break
+        if len(dr_std.races) > 0:
+            fig, ax = plt.subplots(figsize=(12, 8))
+            rounds = np.arange(len(dr_std.races))
+            pts_leader = None
 
-            plt.xticks(races, drstd.rounds)
-            ax.set_xlim(races[0], races[-1])
+            for driver, std in dr_std.drivers.items():
+                cum_pts = np.cumsum(std.points)
+                sel = slice(0, dr_std.next_round)
+                ax.plot(rounds[sel], cum_pts[sel], label=driver, lw=1)
+                next_round = rounds[sel][-1]
+                curr_pts = cum_pts[sel][-1]
+                if pts_leader is None:
+                    pts_leader = curr_pts
+
+                driver_abbr = driver.split(' ')[1][:3]
+                ax.text(next_round, curr_pts, f'{driver_abbr} {cum_pts[sel][-1]:g} pts',
+                        ha='center', va='bottom', size=10*(curr_pts/pts_leader)**.1)
+
+            ax.set_xticks(rounds, dr_std.races)
             ax.set_xlabel('Round')
             ax.set_ylabel('Points')
             ax.set_title('{} FIA Formula One World Drivers\'s Championship standings'.format(year))
             ax.legend(loc='upper left', ncol=2)
 
-            fig.savefig('f1_{}.png'.format(year), dpi=150)
-            plt.close()
+            fig.set_tight_layout('tight')
+            fig.savefig('f1_{}.png'.format(year))
+            plt.close(fig)
         else:
             print('No data found')
