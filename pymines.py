@@ -24,7 +24,7 @@ class _CoordsFormatter():
             j = int(round(x))
             if i >= 0 and i < self.height and j >= 0 and j < self.width:
                 string = '    i = {}, j = {}'.format(i, j)
-        except:
+        except Exception:
             pass
         return string
 
@@ -76,14 +76,16 @@ class Mines:
         self.i, self.j = self.ii.ravel(), self.jj.ravel()
 
         self.mines = np.full((self.height, self.width), False, dtype=bool)  # boolean, mine or not
-        self.mines_count = np.full((self.height, self.width), 0, dtype=int)  # number of mines in the neighboring cells
+        # number of mines in the neighboring cells
+        self.mines_count = np.full((self.height, self.width), 0, dtype=int)
         self.flags = np.full((self.height, self.width), False, dtype=bool)  # mine flags
         self.revealed = np.full((self.height, self.width), False, dtype=bool)  # revealed cells
         self.wrong = np.full((self.height, self.width), False, dtype=bool)  # wrong guesses
 
         self.mines_pts = None  # once initialized, Lines2D object
         self.flags_pts = None  # Line2D objects
-        self.mines_count_txt = np.full((self.height, self.width), None, dtype=object)  # 2D array of Text objects
+        self.mines_count_txt = np.full((self.height, self.width), None,
+                                       dtype=object)  # 2D array of Text objects
         self.revealed_img = None  # AxesImage object
         self.wrong_img = None  # AxesImage object
         self.title_txt = None  # Text object
@@ -95,9 +97,12 @@ class Mines:
         self.cid_mouse = None
         self.cid_key = None
 
-        self.fig, self.ax = plt.subplots(figsize=(max(self.width*self.figsize['scale'], self.figsize['minw']),
-                                                  max(self.height*self.figsize['scale'], self.figsize['minh'])))
-        self.fig.canvas.set_window_title(u'pymines {} × {} ({} mines)'.format(self.width, self.height, self.n_mines))
+        self.fig, self.ax = plt.subplots(figsize=(max(self.width*self.figsize['scale'],
+                                                      self.figsize['minw']),
+                                                  max(self.height*self.figsize['scale'],
+                                                      self.figsize['minh'])))
+        self.fig.canvas.manager.set_window_title(
+            u'pymines {} × {} ({} mines)'.format(self.width, self.height, self.n_mines))
 
         self.draw_minefield()
 
@@ -143,7 +148,8 @@ class Mines:
             self.ax.format_coord = _CoordsFormatter(self.width, self.height)
 
         # Title text: number of flags/total mines
-        self.title_txt = self.ax.set_title('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
+        self.title_txt = self.ax.set_title(
+            '{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
 
         self.refresh_canvas()
 
@@ -175,8 +181,8 @@ class Mines:
         p_count = self.mines_count > 0
         for i, j, count in zip(self.ii[p_count], self.jj[p_count], self.mines_count[p_count]):
             self.mines_count_txt[i, j] = self.ax.text(j, i, str(count), fontweight='bold',
-                                                      color=self.color_dict[count], ha='center', va='center',
-                                                      visible=False)
+                                                      color=self.color_dict[count], ha='center',
+                                                      va='center', visible=False)
         self.is_initialized = True
 
         self.refresh_canvas()
@@ -199,7 +205,8 @@ class Mines:
         """
         n_neighbor_mines = -1
         if not self.mines[i, j]:
-            n_neighbor_mines = np.count_nonzero(self.mines[(i-1 if i > 0 else 0):i+2, (j-1 if j > 0 else 0):j+2])
+            n_neighbor_mines = np.count_nonzero(
+                self.mines[(i-1 if i > 0 else 0):i+2, (j-1 if j > 0 else 0):j+2])
         return n_neighbor_mines
 
     def count_neighbor_flags(self, i, j):
@@ -327,24 +334,27 @@ class Mines:
             self.draw_minefield()
 
     @staticmethod
-    def new_game(level='beginner', show=True):
+    def new_game(*args, level='beginner', show=True):
         """
-        Static method for initializing the game in pre-defined levels
+        Static method for initializing the game with custom settings or in pre-defined levels
         (beginner, intermediate, expert)
         """
-        return Mines(*Mines.levels[Mines.level_aliases[level]], show)
+        if len(args) == 3:
+            minefield = args
+        else:
+            minefield = Mines.levels[Mines.level_aliases[level]]
+        return Mines(*minefield, show)
 
 
 if __name__ == '__main__':
-    import sys
+    import argparse
 
-    if len(sys.argv) == 2:
-        # Argument passed is level
-        game = Mines.new_game(sys.argv[1])
-    elif len(sys.argv) == 4:
-        # Arguments passed are number width, height, and number of mines
-        game = Mines(*map(int, sys.argv[1:]))
-    else:
-        if len(sys.argv) > 1:
-            print('Invalid arguments. Starting game in the beginner level.')
-        game = Mines.new_game()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', metavar='level (b, i, e)', default='beginner', help='level, i.e., '
+                        'beginner (8 x 8, 10 mines), intermediate (16 x 16, 40 mines), expert (30 '
+                        'x 16, 99 mines)')
+    parser.add_argument('-c', metavar=('width', 'height', 'mines'), default=[], type=int, nargs=3,
+                        help='custom game, provided width, height, and number of mines')
+    args = parser.parse_args()
+
+    game = Mines.new_game(*args.c, level=args.l)
