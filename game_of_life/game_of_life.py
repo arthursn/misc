@@ -3,6 +3,7 @@ import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib import colors
 from pathlib import Path
 from PIL import Image, ImageOps
 
@@ -49,7 +50,7 @@ class GameOfLife(object):
             self.cells_init = cells_init.copy()
             self.cells = cells_init.copy()
         else:
-            raise Exception('Shapes do not match')
+            raise Exception("Shapes do not match")
 
     def count_alive_neighbours(self, i, j):
         """
@@ -65,8 +66,8 @@ class GameOfLife(object):
         n: int
             Number of alive neighbouring cells.
         """
-        slice_i = slice(max(i-1, 0), i+2, 1)
-        slice_j = slice(max(j-1, 0), j+2, 1)
+        slice_i = slice(max(i - 1, 0), i + 2, 1)
+        slice_j = slice(max(j - 1, 0), j + 2, 1)
         return np.count_nonzero(self.cells[slice_i, slice_j]) - int(self.cells[i, j])
 
     def step(self):
@@ -126,8 +127,17 @@ class GameOfLife(object):
 
         return gol
 
-    def animate(self, basefname=None, cycle=False, nframes=None, freezeframes=0, interval=80,
-                dpi=90):
+    def animate(
+        self,
+        basefname=None,
+        cycle=False,
+        nframes=None,
+        freezeframes=0,
+        interval=80,
+        dpi=90,
+        color_dead="white",
+        color_alive="black",
+    ):
         """
         Animate Game of Life
 
@@ -153,14 +163,31 @@ class GameOfLife(object):
         interval: float (optional)
             Interval (in milliseconds) between frames.
             Default: 80
+        color_dead: list or str (optional)
+            Color of the dead cells as RGB colors (values from 0 to 1), color
+            name, or hex code
+            Default: white
+        color_alive: list or str (optional)
+            Color of the alive cells as RGB colors (values from 0 to 1), color
+            name, or hex code
+            Default: black
         """
         figsize = np.array(self.cells.shape[::-1])
         figsize = figsize * 10 / figsize.max()
 
         fig, ax = plt.subplots(figsize=figsize)
-        ax.axis('off')
+        ax.axis("off")
 
-        img = ax.imshow(self.cells, cmap='gray_r', interpolation='nearest')
+        color_dead = colors.to_rgb(color_dead)
+        color_alive = colors.to_rgb(color_alive)
+
+        def colorize_cells(cells):
+            color_data = np.ones((*cells.shape, 3))
+            color_data[~self.cells] *= np.array(color_dead)
+            color_data[self.cells] *= np.array(color_alive)
+            return (color_data * 255).astype(np.uint8)
+
+        img = ax.imshow(colorize_cells(self.cells))
         cells_init = self.cells.copy()
 
         def func(*args):
@@ -169,80 +196,143 @@ class GameOfLife(object):
                     self.cells = cells_init
             else:
                 self.step()
-            img.set_data(self.cells)
-            return img,
+            img.set_data(colorize_cells(self.cells))
+            return (img,)
 
-        kwargs = dict(fig=fig,
-                      func=func,
-                      blit=True,
-                      interval=interval)
+        kwargs = dict(fig=fig, func=func, blit=True, interval=interval)
         if nframes is not None:
-            kwargs['frames'] = range(nframes)
+            kwargs["frames"] = range(nframes)
 
         ani = animation.FuncAnimation(**kwargs)
 
-        fig.tight_layout()
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
 
         if basefname is not None:
-            fout = Path(basefname).with_suffix('.gif')
+            fout = Path(basefname).with_suffix(".gif")
 
             savefig_kwargs = dict(pad_inches=0)
             if cycle:
-                fout_tmp = Path('gol_tmp.gif')
-                ani.save(fout_tmp, writer='imagemagick', dpi=dpi, savefig_kwargs=savefig_kwargs)
-                subprocess.call(f'convert {fout_tmp} -coalesce -duplicate 1,-2-1 {fout}',
-                                shell=True)
+                fout_tmp = Path("gol_tmp.gif")
+                ani.save(
+                    fout_tmp,
+                    writer="imagemagick",
+                    dpi=dpi,
+                    savefig_kwargs=savefig_kwargs,
+                )
+                subprocess.call(
+                    f"convert {fout_tmp} -coalesce -duplicate 1,-2-1 {fout}", shell=True
+                )
                 fout_tmp.unlink()
             else:
-                ani.save(fout, writer='imagemagick', dpi=dpi, savefig_kwargs=savefig_kwargs)
+                ani.save(
+                    fout, writer="imagemagick", dpi=dpi, savefig_kwargs=savefig_kwargs
+                )
 
         return ani
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('fname', nargs='*', help='input images used as initial state to game of '
-                        'life')
-    parser.add_argument('-s', '--save', action='store_true', help='save as gif')
-    parser.add_argument('-c', '--cycle', action='store_true', help='patrol-cycle (forwards and '
-                        'backwards) animation')
-    parser.add_argument('-n', '--nframes', type=int, help='number of frames')
-    parser.add_argument('-f', '--freezeframes', type=int, default=0, help='number of frozen '
-                        'frames at the beginning of the animation')
-    parser.add_argument('-i', '--interval', type=float, default=80, help='interval (in '
-                        'milliseconds) between frames')
-    parser.add_argument('-d', '--dpi', type=float, default=90, help='output gif resolution in '
-                        'pixels per inch')
+    parser.add_argument(
+        "fname",
+        nargs="*",
+        help="input images used as initial state to game of " "life",
+    )
+    parser.add_argument(
+        "-s",
+        "--save",
+        action="store_true",
+        help="save as gif",
+    )
+    parser.add_argument(
+        "-c",
+        "--cycle",
+        action="store_true",
+        help="patrol-cycle (forwards and " "backwards) animation",
+    )
+    parser.add_argument(
+        "-n",
+        "--nframes",
+        type=int,
+        help="number of frames",
+    )
+    parser.add_argument(
+        "-f",
+        "--freezeframes",
+        type=int,
+        default=0,
+        help="number of frozen " "frames at the beginning of the animation",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=float,
+        default=80,
+        help="interval (in " "milliseconds) between frames",
+    )
+    parser.add_argument(
+        "-d",
+        "--dpi",
+        type=float,
+        default=90,
+        help="output gif resolution in " "pixels per inch",
+    )
+    parser.add_argument(
+        "-cd",
+        "--color_dead",
+        default="white",
+        help="color of the dead cells as hex code or color name",
+    )
+    parser.add_argument(
+        "-ca",
+        "--color_alive",
+        default="black",
+        help="color of the alive cells as hex code or color name",
+    )
     args = parser.parse_args()
 
     if len(args.fname) == 0:
         gol = GameOfLife(14, 38)
 
         cells_init = gol.cells_template()
-        cells_init[5:5+2, 1:1+2] = True
-        cells_init[5:5+3, 11:11+1] = True
-        cells_init[4:4+1, 12:12+1] = True
-        cells_init[8:8+1, 12:12+1] = True
-        cells_init[3:3+1, 13:13+2] = True
-        cells_init[9:9+1, 13:13+2] = True
-        cells_init[6:6+1, 15:15+1] = True
-        cells_init[4:4+1, 16:16+1] = True
-        cells_init[8:8+1, 16:16+1] = True
-        cells_init[5:5+3, 17:17+1] = True
-        cells_init[6:6+1, 18:18+1] = True
-        cells_init[3:3+3, 21:21+2] = True
-        cells_init[2:2+1, 23:23+1] = True
-        cells_init[6:6+1, 23:23+1] = True
-        cells_init[1:1+2, 25:25+1] = True
-        cells_init[6:6+2, 25:25+1] = True
-        cells_init[3:3+2, 35:35+2] = True
+        cells_init[5 : 5 + 2, 1 : 1 + 2] = True
+        cells_init[5 : 5 + 3, 11 : 11 + 1] = True
+        cells_init[4 : 4 + 1, 12 : 12 + 1] = True
+        cells_init[8 : 8 + 1, 12 : 12 + 1] = True
+        cells_init[3 : 3 + 1, 13 : 13 + 2] = True
+        cells_init[9 : 9 + 1, 13 : 13 + 2] = True
+        cells_init[6 : 6 + 1, 15 : 15 + 1] = True
+        cells_init[4 : 4 + 1, 16 : 16 + 1] = True
+        cells_init[8 : 8 + 1, 16 : 16 + 1] = True
+        cells_init[5 : 5 + 3, 17 : 17 + 1] = True
+        cells_init[6 : 6 + 1, 18 : 18 + 1] = True
+        cells_init[3 : 3 + 3, 21 : 21 + 2] = True
+        cells_init[2 : 2 + 1, 23 : 23 + 1] = True
+        cells_init[6 : 6 + 1, 23 : 23 + 1] = True
+        cells_init[1 : 1 + 2, 25 : 25 + 1] = True
+        cells_init[6 : 6 + 2, 25 : 25 + 1] = True
+        cells_init[3 : 3 + 2, 35 : 35 + 2] = True
         gol.initialize_cells(cells_init)
 
-        ani = gol.animate('glider' if args.save else None, args.cycle, args.nframes,
-                          args.freezeframes, args.interval, args.dpi)
+        ani = gol.animate(
+            "glider" if args.save else None,
+            args.cycle,
+            args.nframes,
+            args.freezeframes,
+            args.interval,
+            args.dpi,
+        )
     else:
         for fname in args.fname:
             gol = GameOfLife.from_image(fname)
-            ani = gol.animate(fname if args.save else None, args.cycle, args.nframes,
-                              args.freezeframes, args.interval, args.dpi)
+            ani = gol.animate(
+                fname if args.save else None,
+                args.cycle,
+                args.nframes,
+                args.freezeframes,
+                args.interval,
+                args.dpi,
+                args.color_dead,
+                args.color_alive,
+            )
     plt.show()
