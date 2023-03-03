@@ -129,7 +129,7 @@ class GameOfLife(object):
 
     def animate(
         self,
-        basefname=None,
+        save=None,
         cycle=False,
         nframes=None,
         freezeframes=0,
@@ -143,9 +143,9 @@ class GameOfLife(object):
 
         Parameters
         ----------
-        basefname: str (optional)
-            Base filename of file to be saved as gif. If None is provided,
-            then the animation is not saved.
+        save: str (optional)
+            If None is provided, the animation is not saved. If a string is
+            provided, interprets it as the filename to be saved
             Default: None
         cycle: bool (optional)
             If True, animates as patrol-cycle (forwards, then backwards).
@@ -207,12 +207,12 @@ class GameOfLife(object):
 
         fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=None, hspace=None)
 
-        if basefname is not None:
-            fout = Path(basefname).with_suffix(".gif")
+        if save is not None:
+            fout = save
 
             savefig_kwargs = dict(pad_inches=0)
             if cycle:
-                fout_tmp = Path("gol_tmp.gif")
+                fout_tmp = Path(".gol_tmp.gif")
                 ani.save(
                     fout_tmp,
                     writer="imagemagick",
@@ -235,20 +235,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "fname",
+        metavar="fig1.[jpg,png,...], fig1.[jpg,png,...], ...",
         nargs="*",
         help="input images used as initial state to game of " "life",
     )
     parser.add_argument(
         "-s",
         "--save",
-        action="store_true",
-        help="save as gif",
+        metavar="game_of_life.gif",
+        nargs="?",
+        const="?",
+        help="save as gif. If no argument is provided, saves using [fname] as a base file name",
     )
     parser.add_argument(
         "-c",
         "--cycle",
         action="store_true",
         help="patrol-cycle (forwards and " "backwards) animation",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="if true, does not show animation as matplotlib interactive window",
     )
     parser.add_argument(
         "-n",
@@ -314,25 +323,32 @@ if __name__ == "__main__":
         cells_init[3 : 3 + 2, 35 : 35 + 2] = True
         gol.initialize_cells(cells_init)
 
+        save = "glider.gif" if args.save == "?" else args.save
         ani = gol.animate(
-            "glider" if args.save else None,
+            save,
             args.cycle,
             args.nframes,
             args.freezeframes,
             args.interval,
             args.dpi,
         )
-    else:
-        for fname in args.fname:
-            gol = GameOfLife.from_image(fname)
-            ani = gol.animate(
-                fname if args.save else None,
-                args.cycle,
-                args.nframes,
-                args.freezeframes,
-                args.interval,
-                args.dpi,
-                args.color_dead,
-                args.color_alive,
-            )
-    plt.show()
+
+        if args.quiet:
+            plt.show()
+
+    for fname in args.fname:
+        save = Path(fname).with_suffix(".gif") if args.save == "?" else args.save
+        gol = GameOfLife.from_image(fname)
+        ani = gol.animate(
+            save,
+            args.cycle,
+            args.nframes,
+            args.freezeframes,
+            args.interval,
+            args.dpi,
+            args.color_dead,
+            args.color_alive,
+        )
+
+    if args.quiet:
+        plt.show()
