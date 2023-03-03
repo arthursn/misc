@@ -21,12 +21,12 @@ def parse_html_tables(table: bs4.element.Tag):
     Parse html table to list
     """
     rows = []
-    for trow in table.find_all('tr'):
+    for trow in table.find_all("tr"):
         row = []
-        for tcell in trow.find_all(['th', 'td']):
+        for tcell in trow.find_all(["th", "td"]):
             strings = []
             for item in tcell.strings:
-                item = item.strip(' \n\t\xa0')
+                item = item.strip(" \n\t\xa0")
                 if len(item) > 0:
                     strings.append(item)
             row.append(strings)
@@ -50,34 +50,53 @@ class DriversStandings:
         self.next_round = 0
 
         if self.year >= 2022:
-            self._sprint_position_to_points = {1: 8, 2: 7, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1}
+            self._sprint_position_to_points = {
+                1: 8,
+                2: 7,
+                3: 6,
+                4: 5,
+                5: 4,
+                6: 3,
+                7: 2,
+                8: 1,
+            }
         elif self.year >= 2021:
             self._sprint_position_to_points = {1: 3, 2: 2, 3: 1}
         else:
             self._sprint_position_to_points = {}
 
         if self.year >= 2010:
-            self._position_to_points = {1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2,
-                                        10: 1}
+            self._position_to_points = {
+                1: 25,
+                2: 18,
+                3: 15,
+                4: 12,
+                5: 10,
+                6: 8,
+                7: 6,
+                8: 4,
+                9: 2,
+                10: 1,
+            }
         elif self.year >= 2003:
             self._position_to_points = {1: 10, 2: 8, 3: 6, 4: 5, 5: 4, 6: 3, 7: 2, 8: 1}
         elif self.year >= 1991:
             self._position_to_points = {1: 10, 2: 6, 3: 4, 4: 3, 5: 2, 6: 1}
         else:
-            raise Exception('Not supported for championships held before 1991')
+            raise RuntimeError("Not supported for championships held before 1991")
 
     def position_to_points(self, p, round, fastest_lap=False, p_sprint=None):
         # Race points
         pts = self._position_to_points.get(p, 0)
 
-        if self.year == 2014 and round == 'ABU':
-            pts *= 2.
-        if self.year == 1991 and round == 'AUS':
-            pts *= .5
-        if self.year == 2009 and round == 'MAL':
-            pts *= .5
-        if self.year == 2021 and round == 'BEL':
-            pts *= .5
+        if self.year == 2014 and round == "ABU":
+            pts *= 2.0
+        if self.year == 1991 and round == "AUS":
+            pts *= 0.5
+        if self.year == 2009 and round == "MAL":
+            pts *= 0.5
+        if self.year == 2021 and round == "BEL":
+            pts *= 0.5
             fastest_lap = False
 
         if self.year >= 2019:
@@ -93,34 +112,39 @@ class DriversStandings:
 
 def scrape_wiki_f1_standings(year):
     """
-    Given a F1 season, scrapes the corresponding wikipedia page 
+    Given a F1 season, scrapes the corresponding wikipedia page
     for the drivers standings
     """
-    url = f'https://en.wikipedia.org/wiki/{year:d}_FIA_Formula_One_World_Championship'
+    url = f"https://en.wikipedia.org/wiki/{year:d}_FIA_Formula_One_World_Championship"
     r = requests.get(url)
 
     dr_std = DriversStandings(year)
 
     if r.status_code == 200:  # success!
-        soup = bs4.BeautifulSoup(r.content, 'html.parser')
+        soup = bs4.BeautifulSoup(r.content, "html.parser")
 
-        lookfor = ['Drivers\' standings',
-                   'Drivers\' Championship standings',
-                   'Drivers Championship standings',
-                   'World Drivers\' Championship final standings',
-                   '{year:d} Drivers\' Championship final standings',
-                   'World Drivers\' Championship standings',
-                   'Drivers\' Championship',
-                   'Drivers']
+        lookfor = [
+            "Drivers' standings",
+            "Drivers' Championship standings",
+            "Drivers Championship standings",
+            "World Drivers' Championship final standings",
+            "{year:d} Drivers' Championship final standings",
+            "World Drivers' Championship standings",
+            "Drivers' Championship",
+            "Drivers",
+        ]
 
         for sectionname in lookfor:
-            dr_std_sect = [h3tag for h3tag in soup.find_all('h3')
-                           if h3tag.find(text=re.compile((sectionname), re.IGNORECASE))]
+            dr_std_sect = [
+                h3tag
+                for h3tag in soup.find_all("h3")
+                if h3tag.find(string=re.compile((sectionname), re.IGNORECASE))
+            ]
 
             if len(dr_std_sect) > 0:
                 dr_std_sect = dr_std_sect[0]
                 # Next two tables are for the point system and drivers' points
-                tables = dr_std_sect.find_all_next('table')[:2]
+                tables = dr_std_sect.find_all_next("table")[:2]
 
                 rows = parse_html_tables(tables[0])
                 if len(rows) == 2:
@@ -128,7 +152,7 @@ def scrape_wiki_f1_standings(year):
                 else:
                     posdr_table = tables[0]
 
-                tab = posdr_table.find('table')
+                tab = posdr_table.find("table")
                 if tab:
                     posdr_table = tab
 
@@ -140,7 +164,7 @@ def scrape_wiki_f1_standings(year):
                 # Loop through each row (driver)
                 for row in rows[1:-1]:
                     try:
-                        if (row[1][0].lower() == 'driver'):
+                        if row[1][0].lower() == "driver":
                             continue
                     except Exception:
                         continue
@@ -155,19 +179,21 @@ def scrape_wiki_f1_standings(year):
                         pt = 0
                         if len(p_raw) >= 1:
                             try:
-                                p = int(''.join(filter(is_int, p_raw[0])))
+                                p = int("".join(filter(is_int, p_raw[0])))
                             except ValueError:
                                 p = -1  # DNS, RET, ...
                             fastest_lap = False
                             p_sprint = None
                             if len(p_raw) >= 2:
                                 try:
-                                    rest = ''.join(p_raw[1:])
-                                    fastest_lap = 'F' in rest
-                                    p_sprint = int(''.join(filter(is_int, rest)))
+                                    rest = "".join(p_raw[1:])
+                                    fastest_lap = "F" in rest
+                                    p_sprint = int("".join(filter(is_int, rest)))
                                 except ValueError:
                                     pass
-                            pt = dr_std.position_to_points(p, rnd, fastest_lap, p_sprint)
+                            pt = dr_std.position_to_points(
+                                p, rnd, fastest_lap, p_sprint
+                            )
                         pos.append(p)
                         pts.append(pt)
 
@@ -185,7 +211,7 @@ def scrape_wiki_f1_standings(year):
     return dr_std
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
     import datetime
     import numpy as np
@@ -193,8 +219,16 @@ if __name__ == '__main__':
 
     now = datetime.datetime.now()
     parser = argparse.ArgumentParser()
-    parser.add_argument('years', nargs='*', type=int, default=[now.year])
-    parser.add_argument('-s', '--save', action='store_true')
+    parser.add_argument("years", nargs="*", type=int, default=[now.year])
+    parser.add_argument(
+        "-s", "--save", action="store_true", help="if true, saves into file [year].png"
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="if true, does not show plot in interactive window",
+    )
 
     args = parser.parse_args()
 
@@ -218,20 +252,29 @@ if __name__ == '__main__':
                 if pts_leader is None:
                     pts_leader = curr_pts
 
-                driver_abbr = driver.split(' ')[1][:3]
-                ax.text(next_round, curr_pts, f'{driver_abbr} {cum_pts[sel][-1]:g} pts',
-                        ha='center', va='bottom', size=10*(curr_pts/pts_leader)**.1)
+                driver_abbr = driver.split(" ")[1][:3]
+                ax.text(
+                    next_round,
+                    curr_pts,
+                    f"{driver_abbr} {cum_pts[sel][-1]:g} pts",
+                    ha="center",
+                    va="bottom",
+                    size=10 * (curr_pts / pts_leader) ** 0.1,
+                )
 
             ax.set_xticks(rounds)
             ax.set_xticklabels(dr_std.races)
-            ax.set_xlabel('Round')
-            ax.set_ylabel('Points')
-            ax.set_title(f'{year} FIA Formula One World Drivers\'s Championship standings')
-            ax.legend(loc='upper left', ncol=2)
+            ax.set_xlabel("Round")
+            ax.set_ylabel("Points")
+            ax.set_title(
+                f"{year} FIA Formula One World Drivers's Championship standings"
+            )
+            ax.legend(loc="upper left", ncol=2)
 
             if args.save:
-                fig.savefig(f'f1_{year}.png')
+                fig.savefig(f"f1_{year}.png")
 
-            plt.show()
+            if not args.quiet:
+                plt.show()
         else:
-            print('No data found')
+            print("No data found")
