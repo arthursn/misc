@@ -1,0 +1,18 @@
+[project]
+name = "pymines"
+version = "0.1.0"
+description = "A simple Minesweeper game written in Python"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["matplotlib>=3.10.5", "numpy>=2.3.2"]
+
+[project.optional-dependencies]
+qt_backend = ["PyQt6"]
+webagg_backend = ["tornado"]
+
+[project.scripts]
+pymines = "pymines:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

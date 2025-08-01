@@ -184,9 +184,9 @@ class Mines:
         Initializes new game. This function is called after first click
         in order to prevent the first click being straight over a mine
         """
-        population = set(range(self.n))
+        population = list(range(self.n))
         population.remove(i * self.width + j)  # removes initial click
-        idx = random.sample(list(population), self.n_mines)  # choose mines
+        idx = random.sample(population, self.n_mines)  # choose mines
 
         # Sets mines
         self.mines[self.i[idx], self.j[idx]] = True
@@ -392,10 +392,10 @@ class Mines:
             minefield = args
         else:
             minefield = Mines.levels[Mines.level_aliases[level]]
-        return Mines(*minefield, show)
+        return Mines(*minefield, show) # type: ignore
 
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -417,4 +417,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    game = Mines.new_game(*args.c, level=args.l)
+    Mines.new_game(*args.c, level=args.l)
+
+
+if __name__ == "__main__":
+    main()
