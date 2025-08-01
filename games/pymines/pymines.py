@@ -86,24 +86,20 @@ class Mines:
         self.ii, self.jj = np.mgrid[: self.height, : self.width]
         self.i, self.j = self.ii.ravel(), self.jj.ravel()
 
-        self.mines = np.full(
-            (self.height, self.width), False, dtype=bool
-        )  # boolean, mine or not
+        # boolean, mine or not
+        self.mines = np.full((self.height, self.width), False, dtype=bool)
         # number of mines in the neighboring cells
         self.mines_count = np.full((self.height, self.width), 0, dtype=int)
         self.flags = np.full((self.height, self.width), False, dtype=bool)  # mine flags
-        self.revealed = np.full(
-            (self.height, self.width), False, dtype=bool
-        )  # revealed cells
-        self.wrong = np.full(
-            (self.height, self.width), False, dtype=bool
-        )  # wrong guesses
+        # revealed cells
+        self.revealed = np.full((self.height, self.width), False, dtype=bool)
+        # wrong guesses
+        self.wrong = np.full((self.height, self.width), False, dtype=bool)
 
         self.mines_pts = None  # once initialized, Lines2D object
         self.flags_pts = None  # Line2D objects
-        self.mines_count_txt = np.full(
-            (self.height, self.width), None, dtype=object
-        )  # 2D array of Text objects
+        # 2D array of Text objects
+        self.mines_count_txt = np.full((self.height, self.width), None, dtype=object)
         self.revealed_img = None  # AxesImage object
         self.wrong_img = None  # AxesImage object
         self.title_txt = None  # Text object
@@ -121,7 +117,7 @@ class Mines:
                 max(self.height * self.figsize["scale"], self.figsize["minh"]),
             )
         )
-        self.fig.canvas.manager.set_window_title(
+        self.fig.canvas.manager.set_window_title(  # type: ignore
             "pymines {} × {} ({} mines)".format(self.width, self.height, self.n_mines)
         )
 
@@ -286,7 +282,7 @@ class Mines:
                     # from gnome-mines
                     self.flags[i, j] = False
                     # Reveals mine count
-                    self.mines_count_txt[i, j].set_visible(True)
+                    self.mines_count_txt[i, j].set_visible(True)  # type: ignore
         elif self.mines_count[i, j] == self.count_neighbor_flags(i, j):
             # If cell that's already revealed is clicked and the number of
             # neighboring flags is the same as the number of neighboring
@@ -309,8 +305,8 @@ class Mines:
                     self.initialize(i, j)
 
                 self.update_revealed(i, j)
-                self.revealed_img.set_data(self.revealed)
-                self.flags_pts.set_data(*np.where(self.flags)[::-1])
+                self.revealed_img.set_data(self.revealed)  # type: ignore
+                self.flags_pts.set_data(*np.where(self.flags)[::-1])  # type: ignore
                 self.refresh_canvas()
 
             if np.count_nonzero(self.revealed) == self.n_not_mines:
@@ -324,8 +320,8 @@ class Mines:
         if not self.is_game_over and self.is_initialized:
             if not self.revealed[i, j]:
                 self.flags[i, j] = not self.flags[i, j]
-                self.flags_pts.set_data(*np.where(self.flags)[::-1])
-                self.title_txt.set_text(
+                self.flags_pts.set_data(*np.where(self.flags)[::-1])  # type: ignore
+                self.title_txt.set_text(  # type: ignore
                     "{}/{}".format(np.count_nonzero(self.flags), self.n_mines)
                 )
                 self.refresh_canvas()
@@ -337,19 +333,19 @@ class Mines:
         self.is_game_over = True
 
         if win:
-            self.flags_pts.set_data(
+            self.flags_pts.set_data(  # type: ignore
                 *np.where(self.mines)[::-1]
             )  # shows mines marked with flags
-            self.title_txt.set_text("You win! Press F2 to start a new game")
+            self.title_txt.set_text("You win! Press F2 to start a new game")  # type: ignore
         else:
-            self.wrong_img.set_data(self.wrong)  # wrong guesses
+            self.wrong_img.set_data(self.wrong)  # type: ignore # wrong guesses
             self.mines_pts = self.ax.plot(
                 self.jj[self.mines & ~self.flags],
                 self.ii[self.mines & ~self.flags],
                 "kX",
                 ms=10,
             )  # shows mines
-            self.title_txt.set_text("You lose! Press F2 to start a new game")
+            self.title_txt.set_text("You lose! Press F2 to start a new game")  # type: ignore
 
         self.refresh_canvas()
 
@@ -392,7 +388,7 @@ class Mines:
             minefield = args
         else:
             minefield = Mines.levels[Mines.level_aliases[level]]
-        return Mines(*minefield, show) # type: ignore
+        return Mines(*minefield, show)  # type: ignore
 
 
 def main():
