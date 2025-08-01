@@ -101,5 +101,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# aider files
+.aider*
 
 # End of https://www.gitignore.io/api/python
