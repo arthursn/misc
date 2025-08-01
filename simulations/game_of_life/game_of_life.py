@@ -1,10 +1,11 @@
 import argparse
 import subprocess
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib import colors
 from pathlib import Path
+
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import colors
 from PIL import Image, ImageOps
 
 
@@ -237,7 +238,7 @@ if __name__ == "__main__":
         "fname",
         metavar="fig1.[jpg,png,...], fig1.[jpg,png,...], ...",
         nargs="*",
-        help="input images used as initial state to game of " "life",
+        help="input images used as initial state to game of life",
     )
     parser.add_argument(
         "-s",
@@ -251,7 +252,7 @@ if __name__ == "__main__":
         "-c",
         "--cycle",
         action="store_true",
-        help="patrol-cycle (forwards and " "backwards) animation",
+        help="patrol-cycle (forwards and backwards) animation",
     )
     parser.add_argument(
         "-q",
@@ -270,21 +271,21 @@ if __name__ == "__main__":
         "--freezeframes",
         type=int,
         default=0,
-        help="number of frozen " "frames at the beginning of the animation",
+        help="number of frozen frames at the beginning of the animation",
     )
     parser.add_argument(
         "-i",
         "--interval",
         type=float,
         default=80,
-        help="interval (in " "milliseconds) between frames",
+        help="interval (in milliseconds) between frames",
     )
     parser.add_argument(
         "-d",
         "--dpi",
         type=float,
         default=90,
-        help="output gif resolution in " "pixels per inch",
+        help="output gif resolution in pixels per inch",
     )
     parser.add_argument(
         "-cd",
@@ -350,5 +351,5 @@ if __name__ == "__main__":
             args.color_alive,
         )
 
-    if args.quiet:
+    if not args.quiet:
         plt.show()
