@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
-
 import random
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 
-__all__ = ['Mines']
+__all__ = ["Mines"]
 
 
-class _CoordsFormatter():
+class _CoordsFormatter:
     """
     Formats coordinates in the interactive plot mode
     """
@@ -18,12 +17,12 @@ class _CoordsFormatter():
         self.height = height
 
     def __call__(self, x, y):
-        string = ''
+        string = ""
         try:
             i = int(round(y))
             j = int(round(x))
             if i >= 0 and i < self.height and j >= 0 and j < self.width:
-                string = '    i = {}, j = {}'.format(i, j)
+                string = "    i = {}, j = {}".format(i, j)
         except Exception:
             pass
         return string
@@ -42,50 +41,69 @@ class Mines:
     n_mines : int
         Number of mines
     show : bool (optional)
-        If True, displays game when initialized 
+        If True, displays game when initialized
     """
+
     # Colormap object used for showing wrong cells
-    cmap_reds_alpha = LinearSegmentedColormap.from_list(name='Reds_alpha',
-                                                        colors=[[0, 0, 0, 0], [.9, 0, 0, 1]])
+    cmap_reds_alpha = LinearSegmentedColormap.from_list(
+        name="Reds_alpha", colors=[[0, 0, 0, 0], [0.9, 0, 0, 1]]
+    )
 
     # Figure dimensions (min width and height in inches and scale factor)
-    figsize = {'minw': 4, 'minh': 3, 'scale': .7}
+    figsize = {"minw": 4, "minh": 3, "scale": 0.7}
 
     # Color dictionary for coloring the revealed cells according with number
     # of mines in the neighboring cells
-    color_dict = {1: [0, 0, 1], 2: [0, 1, 0], 3: [1, 0, 0], 4: [0, 0, .5],
-                  5: [.5, 0, 0], 6: [0, 0, .66], 7: [0, 0, .33], 8: [0, 0, 0]}
+    color_dict = {
+        1: [0, 0, 1],
+        2: [0, 1, 0],
+        3: [1, 0, 0],
+        4: [0, 0, 0.5],
+        5: [0.5, 0, 0],
+        6: [0, 0, 0.66],
+        7: [0, 0, 0.33],
+        8: [0, 0, 0],
+    }
 
     # Pre-defined levels (level: [width, height, mines])
     levels = {0: [8, 8, 10], 1: [16, 16, 40], 2: [30, 16, 99]}
     # Aliases for the levels
-    level_aliases = {**dict.fromkeys(['beginner', 'b', '0', 0], 0),
-                     **dict.fromkeys(['intermediate', 'i', '1', 1], 1),
-                     **dict.fromkeys(['expert', 'e', '2', 2], 2)}
+    level_aliases = {
+        **dict.fromkeys(["beginner", "b", "0", 0], 0),
+        **dict.fromkeys(["intermediate", "i", "1", 1], 1),
+        **dict.fromkeys(["expert", "e", "2", 2], 2),
+    }
 
     def __init__(self, width, height, n_mines, show=True):
         self.width = width
         self.height = height
-        self.n = self.width*self.height
+        self.n = self.width * self.height
         self.n_mines = n_mines
         if self.n_mines >= self.n:
-            raise Exception('n_mines must be < width*height')
+            raise Exception("n_mines must be < width*height")
         self.n_not_mines = self.n - self.n_mines
 
-        self.ii, self.jj = np.mgrid[:self.height, :self.width]
+        self.ii, self.jj = np.mgrid[: self.height, : self.width]
         self.i, self.j = self.ii.ravel(), self.jj.ravel()
 
-        self.mines = np.full((self.height, self.width), False, dtype=bool)  # boolean, mine or not
+        self.mines = np.full(
+            (self.height, self.width), False, dtype=bool
+        )  # boolean, mine or not
         # number of mines in the neighboring cells
         self.mines_count = np.full((self.height, self.width), 0, dtype=int)
         self.flags = np.full((self.height, self.width), False, dtype=bool)  # mine flags
-        self.revealed = np.full((self.height, self.width), False, dtype=bool)  # revealed cells
-        self.wrong = np.full((self.height, self.width), False, dtype=bool)  # wrong guesses
+        self.revealed = np.full(
+            (self.height, self.width), False, dtype=bool
+        )  # revealed cells
+        self.wrong = np.full(
+            (self.height, self.width), False, dtype=bool
+        )  # wrong guesses
 
         self.mines_pts = None  # once initialized, Lines2D object
         self.flags_pts = None  # Line2D objects
-        self.mines_count_txt = np.full((self.height, self.width), None,
-                                       dtype=object)  # 2D array of Text objects
+        self.mines_count_txt = np.full(
+            (self.height, self.width), None, dtype=object
+        )  # 2D array of Text objects
         self.revealed_img = None  # AxesImage object
         self.wrong_img = None  # AxesImage object
         self.title_txt = None  # Text object
@@ -97,12 +115,15 @@ class Mines:
         self.cid_mouse = None
         self.cid_key = None
 
-        self.fig, self.ax = plt.subplots(figsize=(max(self.width*self.figsize['scale'],
-                                                      self.figsize['minw']),
-                                                  max(self.height*self.figsize['scale'],
-                                                      self.figsize['minh'])))
+        self.fig, self.ax = plt.subplots(
+            figsize=(
+                max(self.width * self.figsize["scale"], self.figsize["minw"]),
+                max(self.height * self.figsize["scale"], self.figsize["minh"]),
+            )
+        )
         self.fig.canvas.manager.set_window_title(
-            u'pymines {} × {} ({} mines)'.format(self.width, self.height, self.n_mines))
+            "pymines {} × {} ({} mines)".format(self.width, self.height, self.n_mines)
+        )
 
         self.draw_minefield()
 
@@ -130,26 +151,31 @@ class Mines:
 
         # Clears plot, sets limits
         self.ax.clear()
-        self.ax.set_aspect('equal')
-        self.ax.axis('off')
-        self.ax.set_xlim(-.6, self.width - .4)
-        self.ax.set_ylim(-.6, self.height - .4)
+        self.ax.set_aspect("equal")
+        self.ax.axis("off")
+        self.ax.set_xlim(-0.6, self.width - 0.4)
+        self.ax.set_ylim(-0.6, self.height - 0.4)
 
         # Draws grid lines
-        for j in np.arange(-.5, self.width):
-            self.ax.plot([j, j], [-.5, self.height-.5], lw=1, color='k')
-        for i in np.arange(-.5, self.height):
-            self.ax.plot([-.5, self.width-.5], [i, i], lw=1, color='k')
+        for j in np.arange(-0.5, self.width):
+            self.ax.plot([j, j], [-0.5, self.height - 0.5], lw=1, color="k")
+        for i in np.arange(-0.5, self.height):
+            self.ax.plot([-0.5, self.width - 0.5], [i, i], lw=1, color="k")
 
         # Connects mouse click and key press event handlers and coordinates formatter
         if self.cid_mouse is None:
-            self.cid_mouse = self.fig.canvas.mpl_connect('button_press_event', self.on_mouse_click)
-            self.cid_key = self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
+            self.cid_mouse = self.fig.canvas.mpl_connect(
+                "button_press_event", self.on_mouse_click
+            )
+            self.cid_key = self.fig.canvas.mpl_connect(
+                "key_press_event", self.on_key_press
+            )
             self.ax.format_coord = _CoordsFormatter(self.width, self.height)
 
         # Title text: number of flags/total mines
         self.title_txt = self.ax.set_title(
-            '{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
+            "{}/{}".format(np.count_nonzero(self.flags), self.n_mines)
+        )
 
         self.refresh_canvas()
 
@@ -159,8 +185,8 @@ class Mines:
         in order to prevent the first click being straight over a mine
         """
         population = set(range(self.n))
-        population.remove(i*self.width + j)  # removes initial click
-        idx = random.sample(population, self.n_mines)  # choose mines
+        population.remove(i * self.width + j)  # removes initial click
+        idx = random.sample(list(population), self.n_mines)  # choose mines
 
         # Sets mines
         self.mines[self.i[idx], self.j[idx]] = True
@@ -171,28 +197,39 @@ class Mines:
         self.wrong = ~self.mines & self.flags
 
         # Initializes plot objects
-        self.flags_pts, = self.ax.plot([], [], 'k>', ms=8)
-        self.revealed_img = self.ax.imshow(self.revealed, vmin=0, vmax=4, cmap='gray_r')
-        self.wrong_img = self.ax.imshow(self.wrong, vmin=0, vmax=1, cmap=self.cmap_reds_alpha)
+        (self.flags_pts,) = self.ax.plot([], [], "k>", ms=8)
+        self.revealed_img = self.ax.imshow(self.revealed, vmin=0, vmax=4, cmap="gray_r")
+        self.wrong_img = self.ax.imshow(
+            self.wrong, vmin=0, vmax=1, cmap=self.cmap_reds_alpha
+        )
 
         # Initializes text objects of neighbor mines counter. They're
         # initially set as non visible. As the cells are revealed, their
         # status is changed to visible
         p_count = self.mines_count > 0
-        for i, j, count in zip(self.ii[p_count], self.jj[p_count], self.mines_count[p_count]):
-            self.mines_count_txt[i, j] = self.ax.text(j, i, str(count), fontweight='bold',
-                                                      color=self.color_dict[count], ha='center',
-                                                      va='center', visible=False)
+        for i, j, count in zip(
+            self.ii[p_count], self.jj[p_count], self.mines_count[p_count]
+        ):
+            self.mines_count_txt[i, j] = self.ax.text(
+                j,
+                i,
+                str(count),
+                fontweight="bold",
+                color=self.color_dict[count],
+                ha="center",
+                va="center",
+                visible=False,
+            )
         self.is_initialized = True
 
         self.refresh_canvas()
 
     def get_ij_neighbors(self, i, j):
         """
-        Gets the i, j coordinates (i is row, y coordinate, j is column, 
+        Gets the i, j coordinates (i is row, y coordinate, j is column,
         x coordinate) of the neighboring cells
         """
-        ii, jj = np.mgrid[i-1:i+2, j-1:j+2]
+        ii, jj = np.mgrid[i - 1 : i + 2, j - 1 : j + 2]
         ii, jj = ii.ravel(), jj.ravel()
         filtr = (ii >= 0) & (ii < self.height) & (jj >= 0) & (jj < self.width)
         ij_neighbors = set(zip(ii[filtr], jj[filtr]))
@@ -206,14 +243,19 @@ class Mines:
         n_neighbor_mines = -1
         if not self.mines[i, j]:
             n_neighbor_mines = np.count_nonzero(
-                self.mines[(i-1 if i > 0 else 0):i+2, (j-1 if j > 0 else 0):j+2])
+                self.mines[
+                    (i - 1 if i > 0 else 0) : i + 2, (j - 1 if j > 0 else 0) : j + 2
+                ]
+            )
         return n_neighbor_mines
 
     def count_neighbor_flags(self, i, j):
         """
         Counts the number of flags in the neighboring cells
         """
-        return np.count_nonzero(self.flags[(i-1 if i > 0 else 0):i+2, (j-1 if j > 0 else 0):j+2])
+        return np.count_nonzero(
+            self.flags[(i - 1 if i > 0 else 0) : i + 2, (j - 1 if j > 0 else 0) : j + 2]
+        )
 
     def update_revealed(self, i, j):
         """
@@ -283,7 +325,9 @@ class Mines:
             if not self.revealed[i, j]:
                 self.flags[i, j] = not self.flags[i, j]
                 self.flags_pts.set_data(*np.where(self.flags)[::-1])
-                self.title_txt.set_text('{}/{}'.format(np.count_nonzero(self.flags), self.n_mines))
+                self.title_txt.set_text(
+                    "{}/{}".format(np.count_nonzero(self.flags), self.n_mines)
+                )
                 self.refresh_canvas()
 
     def game_over(self, win=False):
@@ -293,14 +337,19 @@ class Mines:
         self.is_game_over = True
 
         if win:
-            self.flags_pts.set_data(*np.where(self.mines)[::-1])  # shows mines marked with flags
-            self.title_txt.set_text('You win! Press F2 to start a new game')
+            self.flags_pts.set_data(
+                *np.where(self.mines)[::-1]
+            )  # shows mines marked with flags
+            self.title_txt.set_text("You win! Press F2 to start a new game")
         else:
             self.wrong_img.set_data(self.wrong)  # wrong guesses
-            self.mines_pts = self.ax.plot(self.jj[self.mines & ~self.flags],
-                                          self.ii[self.mines & ~self.flags],
-                                          'kX', ms=10)  # shows mines
-            self.title_txt.set_text('You lose! Press F2 to start a new game')
+            self.mines_pts = self.ax.plot(
+                self.jj[self.mines & ~self.flags],
+                self.ii[self.mines & ~self.flags],
+                "kX",
+                ms=10,
+            )  # shows mines
+            self.title_txt.set_text("You lose! Press F2 to start a new game")
 
         self.refresh_canvas()
 
@@ -330,11 +379,11 @@ class Mines:
         Callback when key is pressed
         """
         # F2 for starting new game
-        if event.key == 'f2':
+        if event.key == "f2":
             self.draw_minefield()
 
     @staticmethod
-    def new_game(*args, level='beginner', show=True):
+    def new_game(*args, level="beginner", show=True):
         """
         Static method for initializing the game with custom settings or in pre-defined levels
         (beginner, intermediate, expert)
@@ -346,15 +395,26 @@ class Mines:
         return Mines(*minefield, show)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-l', metavar='level (b, i, e)', default='beginner', help='level, i.e., '
-                        'beginner (8 x 8, 10 mines), intermediate (16 x 16, 40 mines), expert (30 '
-                        'x 16, 99 mines)')
-    parser.add_argument('-c', metavar=('width', 'height', 'mines'), default=[], type=int, nargs=3,
-                        help='custom game, provided width, height, and number of mines')
+    parser.add_argument(
+        "-l",
+        metavar="level (b, i, e)",
+        default="beginner",
+        help="level, i.e., "
+        "beginner (8 x 8, 10 mines), intermediate (16 x 16, 40 mines), expert (30 "
+        "x 16, 99 mines)",
+    )
+    parser.add_argument(
+        "-c",
+        metavar=("width", "height", "mines"),
+        default=[],
+        type=int,
+        nargs=3,
+        help="custom game, provided width, height, and number of mines",
+    )
     args = parser.parse_args()
 
     game = Mines.new_game(*args.c, level=args.l)
