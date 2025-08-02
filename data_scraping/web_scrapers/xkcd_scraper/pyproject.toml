@@ -1,0 +1,16 @@
+[project]
+name = "xkcd-scraper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "bs4>=0.0.2",
+]
+
+[project.scripts]
+xkcd-scraper = "xkcd_scraper:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

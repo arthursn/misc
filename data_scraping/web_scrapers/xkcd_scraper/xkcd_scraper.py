@@ -1,9 +1,8 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-import sys
 import os
+import sys
+
 import requests
+
 # Python library for pulling data out of HTML and XML files
 from bs4 import BeautifulSoup
 
@@ -11,9 +10,9 @@ from bs4 import BeautifulSoup
 def scrape_xkcd(issue, save=True):
     meta = {}
     issue = str(issue)
-    url = 'https://m.xkcd.com/' + issue
+    url = "https://m.xkcd.com/" + issue
 
-    sys.stdout.write('Fetching comic #{}... '.format(issue))
+    sys.stdout.write("Fetching comic #{}... ".format(issue))
     sys.stdout.flush()
     r = requests.get(url)
     if r.status_code == 200:  # success!
@@ -21,12 +20,16 @@ def scrape_xkcd(issue, save=True):
             soup = BeautifulSoup(r.content, "html.parser")
 
             img = soup.find("img", {"id": "comic"})
-            alt_text = img.get('title')
-            img_src = img.get('src')
-            if 'http' not in img_src:
-                img_src = 'https:' + img_src
+            assert img is not None
 
-            title = soup.find("h1", {"id": "title"}).string
+            alt_text = img.get("title")  # type: ignore
+            img_src = img.get("src")  # type: ignore
+            assert isinstance(img_src, str)
+
+            if "http" not in img_src:
+                img_src = "https:" + img_src
+
+            title = soup.find("h1", {"id": "title"}).string  # type: ignore
 
             local_file = None
             if save:
@@ -34,32 +37,37 @@ def scrape_xkcd(issue, save=True):
                 if r_img.status_code == 200:  # success!
                     extension = os.path.splitext(img_src)[-1]
                     local_file = issue + extension
-                    open(local_file, 'wb').write(r_img.content)
+                    open(local_file, "wb").write(r_img.content)
 
-            meta = {'title': title, 'alt_text': alt_text,
-                    'img_src': img_src, 'local_file': local_file}
+            meta = {
+                "title": title,
+                "alt_text": alt_text,
+                "img_src": img_src,
+                "local_file": local_file,
+            }
 
-            sys.stdout.write('done!\n')
-        except:
-            sys.stdout.write('failed!\n')
+            sys.stdout.write("done!\n")
+        except Exception:
+            sys.stdout.write("failed!\n")
     else:
-        sys.stdout.write('not found!\n')
+        sys.stdout.write("not found!\n")
     sys.stdout.flush()
 
     return meta
 
 
-if __name__ == '__main__':
+def main():
     import json
+
     args = sys.argv[1:]
     issues = []
 
     save = False
     openimg = False
     for arg in args:
-        if arg == '-s':
+        if arg == "-s":
             save = True
-        elif arg == '-o':
+        elif arg == "-o":
             openimg = True
         else:
             issues.append(arg)
@@ -70,6 +78,10 @@ if __name__ == '__main__':
 
         if openimg:
             try:
-                os.system('eog {}'.format(meta['img_src']))
-            except:
+                os.system("eog {}".format(meta["img_src"]))
+            except Exception:
                 pass
+
+
+if __name__ == "__main__":
+    main()
