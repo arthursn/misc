@@ -134,8 +134,7 @@ int main()
 {
 #define TYPE int64_t
 #define FMT "%ld "
-    // This is inneficient; there are too many buckets
-    g_radixSizeBytes = 2;
+    g_radixSizeBytes = 2; // This is inneficient; there are too many buckets
     TYPE array[] = { 4.13, 1.34, 33 << 4, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 10 };
     // TYPE array[] = "H3110 w0r1d?!";
 
