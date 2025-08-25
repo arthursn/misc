@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static size_t g_radixSizeBytes = 1;
+size_t g_radixSizeBytes = 1;
 
 typedef enum {
     RADIX_SUCCESS = 0,
@@ -69,17 +69,17 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
         return RADIX_SUCCESS;
     }
 
-    RadixSortError error;
     const size_t numBuckets = 1 << (8 * g_radixSizeBytes);
     const size_t minBucketSize = len / numBuckets + 1;
+    RadixSortError error;
     Bucket* buckets = malloc(numBuckets * sizeof(Bucket));
     memset(buckets, 0, numBuckets * sizeof(Bucket));
 
     char significantBits = 0;
-    int mostSignificantByte = width;
+    int mostSignificantByte = width - 1;
     while (mostSignificantByte >= 0) {
         for (size_t arrayIndex = 0; arrayIndex < len; arrayIndex++) {
-            significantBits |= ((char*)array)[arrayIndex];
+            significantBits |= *((char*)array + arrayIndex * width + mostSignificantByte);
         }
         if (significantBits) {
             break;
@@ -87,7 +87,7 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
         mostSignificantByte--;
     }
 
-    for (size_t byteIndex = 0; byteIndex < mostSignificantByte; byteIndex += g_radixSizeBytes) {
+    for (size_t byteIndex = 0; byteIndex <= mostSignificantByte; byteIndex += g_radixSizeBytes) {
         // Zeroes bucket count
         for (size_t bucketIndex = 0; bucketIndex < numBuckets; bucketIndex++) {
             buckets[bucketIndex].count = 0;
@@ -132,9 +132,11 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
 
 int main()
 {
-#define TYPE double
-#define FMT "%g "
-    TYPE array[] = { 4.13, 1.34, 33 << 4, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 30 };
+#define TYPE int64_t
+#define FMT "%ld "
+    // This is inneficient; there are too many buckets
+    g_radixSizeBytes = 2;
+    TYPE array[] = { 4.13, 1.34, 33 << 4, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 10 };
     // TYPE array[] = "H3110 w0r1d?!";
 
     size_t len = sizeof(array) / sizeof(TYPE);
