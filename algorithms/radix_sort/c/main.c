@@ -42,7 +42,7 @@ RadixSortError addElementToBucket(Bucket* bucket, void* element, size_t width, s
         fprintf(stderr, "realloc called %p -> %p\n", previous, bucket->elements);
 #endif
     }
-    memcpy(bucket->elements + bucket->count * width, element, width);
+    memcpy((char*)bucket->elements + bucket->count * width, element, width);
     bucket->count++;
 
     return RADIX_SUCCESS;
@@ -79,7 +79,7 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
     int mostSignificantByte = width - 1;
     while (mostSignificantByte >= 0) {
         for (size_t index = mostSignificantByte; index < len * width; index += width) {
-            significantBits |= *(char*)(array + index);
+            significantBits |= ((char*)array)[index];
         }
         if (significantBits) {
             break;
@@ -95,12 +95,12 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
 
         // Loop over all elements of array
         for (size_t arrayIndex = 0; arrayIndex < len; arrayIndex++) {
-            void* element = array + arrayIndex * width; // element as char array
+            char* element = (char*)array + arrayIndex * width; // element as char array
             uintmax_t bucketIndex = 0; // bucket index (must be sized at least g_radixSizeBytes)
             size_t byteIndexTmp = byteIndex;
             for (size_t subElementIndex = 0; subElementIndex < g_radixSizeBytes; subElementIndex++) {
                 // Copy single byte (1 char element) to bucket index
-                memcpy((void*)(&bucketIndex) + subElementIndex, element + byteIndexTmp++, 1);
+                memcpy((char*)(&bucketIndex) + subElementIndex, element + byteIndexTmp++, 1);
             }
             // Place the numbers into their corresponding buckets
             error = addElementToBucket(buckets + bucketIndex, element, width, minBucketSize);
@@ -115,7 +115,7 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
             Bucket* bucket = buckets + bucketIndex;
             if (bucket->count > 0) {
                 size_t byteShift = bucket->count * width;
-                memcpy(array + bytePosition, buckets[bucketIndex].elements, byteShift);
+                memcpy((char*)array + bytePosition, buckets[bucketIndex].elements, byteShift);
                 bytePosition += byteShift;
             }
         }
@@ -132,8 +132,8 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
 
 int main()
 {
-#define TYPE int64_t
-#define FMT "%ld "
+#define TYPE int
+#define FMT "%d "
     g_radixSizeBytes = 2; // This is inneficient; there are too many buckets
     TYPE array[] = { 4.13, 1.34, 33 << 10, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 3 };
     // TYPE array[] = "H3110 w0r1d?!";
