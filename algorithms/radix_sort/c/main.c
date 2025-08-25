@@ -14,12 +14,12 @@ typedef enum {
 } RadixSortError;
 
 typedef struct Bucket {
-    char* elements;
+    void* elements;
     size_t count;
     size_t size;
 } Bucket;
 
-RadixSortError addElementToBucket(Bucket* bucket, char* element, size_t width, size_t minBucketSize)
+RadixSortError addElementToBucket(Bucket* bucket, void* element, size_t width, size_t minBucketSize)
 {
     if (bucket->elements == NULL) {
         bucket->size = minBucketSize;
@@ -78,8 +78,8 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
     char significantBits = 0;
     int mostSignificantByte = width - 1;
     while (mostSignificantByte >= 0) {
-        for (size_t arrayIndex = 0; arrayIndex < len; arrayIndex++) {
-            significantBits |= *((char*)array + arrayIndex * width + mostSignificantByte);
+        for (size_t index = mostSignificantByte; index < len * width; index += width) {
+            significantBits |= *(char*)(array + index);
         }
         if (significantBits) {
             break;
@@ -95,12 +95,12 @@ RadixSortError radixSort(void* array, size_t len, size_t width)
 
         // Loop over all elements of array
         for (size_t arrayIndex = 0; arrayIndex < len; arrayIndex++) {
-            char* element = array + arrayIndex * width; // element as char array
+            void* element = array + arrayIndex * width; // element as char array
             uintmax_t bucketIndex = 0; // bucket index (must be sized at least g_radixSizeBytes)
             size_t byteIndexTmp = byteIndex;
             for (size_t subElementIndex = 0; subElementIndex < g_radixSizeBytes; subElementIndex++) {
                 // Copy single byte (1 char element) to bucket index
-                memcpy(&bucketIndex + subElementIndex, element + byteIndexTmp++, 1);
+                memcpy((void*)(&bucketIndex) + subElementIndex, element + byteIndexTmp++, 1);
             }
             // Place the numbers into their corresponding buckets
             error = addElementToBucket(buckets + bucketIndex, element, width, minBucketSize);
@@ -135,7 +135,7 @@ int main()
 #define TYPE int64_t
 #define FMT "%ld "
     g_radixSizeBytes = 2; // This is inneficient; there are too many buckets
-    TYPE array[] = { 4.13, 1.34, 33 << 4, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 10 };
+    TYPE array[] = { 4.13, 1.34, 33 << 10, 0, 10.1, 3e4, 104.34, 1.0, 2.57, 53, 1025, 1 << 3 };
     // TYPE array[] = "H3110 w0r1d?!";
 
     size_t len = sizeof(array) / sizeof(TYPE);
