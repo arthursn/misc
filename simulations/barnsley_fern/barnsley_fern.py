@@ -55,8 +55,8 @@ class BarnsleyFern:
         # and apply it to last point
         self._xy.append(np.random.choice(self.f, p=self.p)(*self._xy[-1]))  # type: ignore
 
-    def generate(self, nit: int) -> None:
-        for _ in range(nit):
+    def generate(self, niter: int) -> None:
+        for _ in range(niter):
             self.iteration()
 
     def plot(self, ax: Optional[Axes] = None, **kwargs) -> Axes:
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-n",
-        "--nit",
+        "--niter",
         type=lambda x: int(float(x)),
         help="Number of iterations",
         default=int(1e5),
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fern = BarnsleyFern()
-    fern.generate(args.nit)
+    fern.generate(args.niter)
 
     if args.color:
         fern.scatter()
