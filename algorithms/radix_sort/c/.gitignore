@@ -1,4 +1,4 @@
-radix_sort*
+radix_sort
 *.o
 *.obj
 *.exe
