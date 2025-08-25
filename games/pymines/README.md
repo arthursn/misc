@@ -12,7 +12,13 @@ A simple Minesweeper game implementation using Python and Matplotlib.
 
 ## Installation
 
-Install directly from the source directory:
+Install from this repository:
+
+```bash
+pip install git+https://github.com/arthursn/misc.git@master#subdirectory=games/pymines
+```
+
+or from a local copy:
 
 ```bash
 pip install .
@@ -25,8 +31,8 @@ This will install all required dependencies automatically.
 For specific matplotlib backends:
 
 ```bash
-pip install ".[qt_backend]"    # For PyQt6 backend
-pip install ".[webagg_backend]"  # For web-based backend
+pip install 'git+https://github.com/arthursn/misc.git@master#subdirectory=games/pymines[qt_backend]'      # For PyQt6 backend
+pip install 'git+https://github.com/arthursn/misc.git@master#subdirectory=games/pymines[webagg_backend]'  # For web-based backend
 ```
 
 ## Usage
