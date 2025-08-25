@@ -1,6 +1,10 @@
 
 # Created by https://www.gitignore.io/api/python
 
+### Custom ###
+.aider*
+.vscode/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -100,8 +104,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-# aider files
-.aider*
 
 # End of https://www.gitignore.io/api/python
