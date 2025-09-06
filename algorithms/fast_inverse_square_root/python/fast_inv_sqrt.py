@@ -3,6 +3,19 @@ from typing import Literal
 
 
 class FastInverseSqrt:
+    """
+    Implementation of the Fast Inverse Square Root algorithm.
+
+    This class implements the famous "Fast Inverse Square Root" algorithm
+    originally from Quake III Arena, with configurable precision and iterations.
+
+    Args:
+        float_type: Type of floating point to use ("float" or "double")
+        correction: Magic number correction factor
+        newton_iterations: Number of Newton-Raphson iterations to perform
+                          (more iterations = more accuracy, less speed)
+    """
+
     def __init__(
         self,
         float_type: Literal["float", "double"] = "float",
@@ -38,6 +51,15 @@ class FastInverseSqrt:
         self.wtf: int = self.compute_wtf()
 
     def compute_wtf(self) -> int:
+        """
+        Compute the "magic number" used in the fast inverse square root algorithm.
+
+        The magic number depends on the floating point format (float/double) and
+        the correction factor.
+
+        Returns:
+            int: The magic number constant
+        """
         return int(
             3
             * (
@@ -47,6 +69,17 @@ class FastInverseSqrt:
         )
 
     def inv_sqrt(self, x: float) -> float:
+        """
+        Calculate the inverse square root (1/√x) using the fast algorithm.
+
+        This method uses bit manipulation and Newton-Raphson iterations to
+        quickly approximate 1/√x.
+
+        Args:
+            x: The input value (must be positive)
+        Returns:
+            float: The approximate value of 1/√x
+        """
         conv = self.Converter()
         conv.value = x
         x_half = x * 0.5
