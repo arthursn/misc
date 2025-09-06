@@ -46,7 +46,7 @@ class FastInverseSqrt:
             )
         )
 
-    def isqrt(self, x: float) -> float:
+    def inv_sqrt(self, x: float) -> float:
         conv = self.Converter()
         conv.value = x
         x_half = x * 0.5

@@ -1,7 +1,7 @@
 from typing import Any, Dict, Sequence
 
 import numpy as np
-from fisqrt import FastInverseSqrt
+from fast_inv_sqrt import FastInverseSqrt
 from scipy import optimize
 
 
@@ -17,9 +17,9 @@ def optimize_correction(
     true_values = 1.0 / np.sqrt(test_values)
 
     def error_function(correction):
-        fisqrt = FastInverseSqrt(correction=correction, **model_kwargs)
+        model = FastInverseSqrt(correction=correction, **model_kwargs)
         # Calculate fast inverse square root for all test values
-        approx_values = np.array([fisqrt.isqrt(float(x)) for x in test_values])
+        approx_values = np.array([model.inv_sqrt(float(x)) for x in test_values])
         # Calculate relative error
         rel_errors = ((approx_values - true_values) / true_values) ** 2
         # Return mean relative error
@@ -48,7 +48,7 @@ def main():
     # Standard usage
     model_og = FastInverseSqrt(**model_kwargs)  # type: ignore
     print("Standard")
-    print(f" 1/sqrt(3) ≈ {model_og.isqrt(3)}")
+    print(f" 1/sqrt(3) ≈ {model_og.inv_sqrt(3)}")
     print(" correction:", model_og.correction)
     print(" WTF:", hex(model_og.wtf))
 
@@ -63,7 +63,7 @@ def main():
         **model_kwargs,  # type: ignore
     )
     print("Optimized")
-    print(f" 1/sqrt(3) ≈ {model_opt.isqrt(3)}")
+    print(f" 1/sqrt(3) ≈ {model_opt.inv_sqrt(3)}")
     print(" correction:", model_opt.correction)
     print(" WTF:", hex(model_opt.wtf))
 
