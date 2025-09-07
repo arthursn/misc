@@ -7,11 +7,7 @@
         "vscode": {
             "settings": {
                 "terminal.integrated.shell.linux": "/bin/zsh"
-            },
-            "extensions": [
-                "ms-vscode.cpptools",
-                "ms-vscode.cmake-tools"
-            ]
+            }
         }
     },
     "mounts": [
