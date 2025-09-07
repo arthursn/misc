@@ -1,8 +1,9 @@
 #include "fast_inv_sqrt.hpp"
-#include <iostream>
+#include <print>
 
 int main()
 {
-    std::cout << fast_inv_sqrt<float>(3.0) << std::endl;
+    std::println("{}", fast_inv_sqrt<float>(3.0));
+    std::println("{}", fast_inv_sqrt<double>(3.0));
     return 0;
 }

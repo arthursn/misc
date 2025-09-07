@@ -38,7 +38,7 @@ struct WTF<double> {
 };
 
 template <typename T>
-T fast_inv_sqrt(T x)
+inline T fast_inv_sqrt(T x)
 {
     T xHalf = x * 0.5F;
     Converter<T> conv { .value = x };
