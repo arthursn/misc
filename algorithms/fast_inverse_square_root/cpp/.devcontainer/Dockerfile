@@ -9,9 +9,9 @@ RUN apt update && apt install -y \
     zsh \
     && rm -rf /var/lib/apt/lists/*
 
-ARG USERNAME=$USERNAME
-ARG USER_UID=$USER_UID
-ARG USER_GID=$USER_GID
+ARG USERNAME
+ARG USER_UID
+ARG USER_GID
 
 # Create the user
 RUN groupadd --gid $USER_GID $USERNAME \
