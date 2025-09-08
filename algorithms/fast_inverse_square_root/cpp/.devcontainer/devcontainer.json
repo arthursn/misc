@@ -2,8 +2,9 @@
     "name": "C++ Dev",
     "build": {
         "dockerfile": "Dockerfile"
-    },
-    "customizations": {
+    }
+    // Other options...
+    /* "customizations": {
         "vscode": {
             "settings": {
                 "terminal.integrated.shell.linux": "/bin/zsh"
@@ -12,5 +13,5 @@
     },
     "mounts": [
         "source=${localWorkspaceFolder},target=/workspace,type=bind"
-    ]
+    ] */
 }
