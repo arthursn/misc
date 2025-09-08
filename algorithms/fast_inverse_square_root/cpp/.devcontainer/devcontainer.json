@@ -4,5 +4,5 @@
     "service": "dev",
     "workspaceFolder": "/workspaces/misc",
     "shutdownAction": "stopCompose",
-    "initializeCommand": "bash -c 'echo \"GIT_ROOT=$(git rev-parse --show-toplevel)\" > .env'"
+    "initializeCommand": "sh .devcontainer/make_env.sh >.env"
 }

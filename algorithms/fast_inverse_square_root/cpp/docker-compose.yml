@@ -4,15 +4,16 @@ services:
       context: .
       dockerfile: .devcontainer/Dockerfile
       args:
-        USERNAME: ${USER:-$(whoami)}
-        USER_UID: ${UID:-1000}
-        USER_GID: ${GID:-1000}
+        # Picked up from the .env file
+        USERNAME: ${USER}
+        USER_UID: ${UID}
+        USER_GID: ${GID}
 
     volumes:
-      # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
-      # mounts are relative to the first file in the list, which is a level up.
+      # GIT_ROOT is picked up from .env file
       - ${GIT_ROOT}:/workspaces/misc:cached
 
+    # Set working dir as the current dir
     working_dir: /workspaces/misc/algorithms/fast_inverse_square_root/cpp                                              
 
     # [Optional] Required for ptrace-based debuggers like C++, Go, and Rust
