@@ -3,6 +3,5 @@
     "dockerComposeFile": "../docker-compose.yml",
     "service": "dev",
     "workspaceFolder": "/workspaces/misc",
-    "shutdownAction": "stopCompose",
-    "initializeCommand": "sh .devcontainer/make_env.sh >.env"
+    "shutdownAction": "stopCompose"
 }
