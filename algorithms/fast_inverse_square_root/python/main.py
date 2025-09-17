@@ -1,8 +1,10 @@
+import argparse
 from typing import Any, Dict, Sequence
 
 import numpy as np
-from fast_inv_sqrt import FastInverseSqrt
 from scipy import optimize
+
+from fast_inv_sqrt import FastInverseSqrt
 
 
 def optimize_correction(
@@ -38,10 +40,22 @@ def optimize_correction(
 
 
 def main():
-    model_kwargs = dict(
-        float_type="float",
-        newton_iterations=1,
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-f",
+        "--float-type",
+        default="float",
+        choices=["float", "double"],
     )
+    parser.add_argument(
+        "-n",
+        "--newton-iterations",
+        type=int,
+        default=1,
+    )
+    args = parser.parse_args()
+
+    model_kwargs = vars(args)
 
     print("Reference")
     print(f" 1/sqrt(3) = {1 / np.sqrt(3)}")
