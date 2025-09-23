@@ -1,11 +1,15 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
+import argparse
+import datetime
 import re
-import requests
-import bs4
 from collections import OrderedDict
 from dataclasses import dataclass
+from typing import List
+
+import bs4
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
+from bs4.element import Tag
 
 
 def is_int(s):
@@ -16,16 +20,16 @@ def is_int(s):
     return True
 
 
-def parse_html_tables(table: bs4.element.Tag):
+def parse_html_tables(table: Tag) -> List[str]:
     """
     Parse html table to list
     """
     rows = []
     for trow in table.find_all("tr"):
         row = []
-        for tcell in trow.find_all(["th", "td"]):
+        for tcell in trow.find_all(["th", "td"]):  # type: ignore
             strings = []
-            for item in tcell.strings:
+            for item in tcell.strings:  # type: ignore
                 item = item.strip(" \n\t\xa0")
                 if len(item) > 0:
                     strings.append(item)
@@ -35,7 +39,7 @@ def parse_html_tables(table: bs4.element.Tag):
 
 
 @dataclass
-class DriverStanding:
+class DriverWDCClassification:
     name: str  # Driver name
     positions: list  # Race classification per round
     points: list  # Points per round
@@ -115,13 +119,19 @@ def scrape_wiki_f1_standings(year):
     Given a F1 season, scrapes the corresponding wikipedia page
     for the drivers standings
     """
-    url = f"https://en.wikipedia.org/wiki/{year:d}_FIA_Formula_One_World_Championship"
-    r = requests.get(url)
+
+    response = requests.get(
+        url=f"https://en.wikipedia.org/wiki/{year:d}_FIA_Formula_One_World_Championship",
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+        },
+        allow_redirects=True,
+    )
 
     dr_std = DriversStandings(year)
 
-    if r.status_code == 200:  # success!
-        soup = bs4.BeautifulSoup(r.content, "html.parser")
+    if response.status_code == 200:  # success!
+        soup = bs4.BeautifulSoup(response.content, "html.parser")
 
         lookfor = [
             "Drivers' standings",
@@ -135,28 +145,29 @@ def scrape_wiki_f1_standings(year):
         ]
 
         for sectionname in lookfor:
+            regex = re.compile((sectionname), re.IGNORECASE)
             dr_std_sect = [
                 h3tag
                 for h3tag in soup.find_all("h3")
-                if h3tag.find(string=re.compile((sectionname), re.IGNORECASE))
+                if h3tag.find(string=regex)  # type: ignore
             ]
 
             if len(dr_std_sect) > 0:
                 dr_std_sect = dr_std_sect[0]
                 # Next two tables are for the point system and drivers' points
                 tables = dr_std_sect.find_all_next("table")[:2]
+                rows = parse_html_tables(tables[0])  # type: ignore
 
-                rows = parse_html_tables(tables[0])
                 if len(rows) == 2:
                     posdr_table = tables[1]
                 else:
                     posdr_table = tables[0]
 
-                tab = posdr_table.find("table")
+                tab = posdr_table.find("table")  # type: ignore
                 if tab:
                     posdr_table = tab
 
-                rows = parse_html_tables(posdr_table)
+                rows = parse_html_tables(posdr_table)  # type: ignore
                 dr_std.races = [r[0] for r in rows[0][2:-1]]
 
                 next_round = 0
@@ -202,7 +213,7 @@ def scrape_wiki_f1_standings(year):
                     except ValueError:
                         next_round = len(dr_std.races)
 
-                    dr_std.drivers[driver] = DriverStanding(driver, pos, pts)
+                    dr_std.drivers[driver] = DriverWDCClassification(driver, pos, pts)
 
                 dr_std.next_round = next_round
 
@@ -211,12 +222,7 @@ def scrape_wiki_f1_standings(year):
     return dr_std
 
 
-if __name__ == "__main__":
-    import argparse
-    import datetime
-    import numpy as np
-    import matplotlib.pyplot as plt
-
+def main():
     now = datetime.datetime.now()
     parser = argparse.ArgumentParser()
     parser.add_argument("years", nargs="*", type=int, default=[now.year])
@@ -278,3 +284,7 @@ if __name__ == "__main__":
                 plt.show()
         else:
             print("No data found")
+
+
+if __name__ == "__main__":
+    main()

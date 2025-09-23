@@ -1,0 +1,11 @@
+[project]
+name = "f1-wdc-standings"
+version = "0.1.0"
+description = "Visualization of the evolution of the F1 standings along the year"
+requires-python = ">=3.9"
+dependencies = [
+    "beautifulsoup4>=4.13.5",
+    "matplotlib>=3.9.4",
+    "numpy>=2.0.2",
+    "requests>=2.32.5",
+]
